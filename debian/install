@@ -1,0 +1,3 @@
+bin usr
+misc/polkit-1 usr/share
+libexec/gxde-daemon usr/libexec

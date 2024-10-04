@@ -1,0 +1,17 @@
+Source: gxde-daemon
+Section: utils
+Priority: optional
+Maintainer: gfdgd_xi <3025613752@qq.com>
+Rules-Requires-Root: no
+Build-Depends:
+ debhelper-compat (= 13),
+Standards-Version: 4.6.2
+Homepage: https://gitee.com/GXDE-OS/dde-daemon
+
+Package: gxde-daemon
+Architecture: any
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+ python3-pydbus,
+Description: GXDE Daemon
