@@ -1,3 +1,4 @@
 bin usr
 misc/polkit-1 usr/share
+misc/wayland-sessions usr/share
 libexec/gxde-daemon usr/libexec

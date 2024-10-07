@@ -1,0 +1,4 @@
+#!/bin/bash
+export XDG_SESSION_TYPE=wayland
+export DTK2_XWAYLAND=dxcb
+deepin-kwin_wayland --drm --xwayland startdde
