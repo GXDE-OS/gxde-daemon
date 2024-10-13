@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=gxde-wayland
 Comment=GXDE Desktop Environment (Wayland)
-Exec=@PREFIX@/bin/startgxde_wayland
-TryExec=@PREFIX@/bin/startgxde_wayland
+Exec=/usr/bin/startgxde_wayland
+TryExec=/usr/bin/startgxde_wayland
 X-LightDM-Session-Type=wayland
