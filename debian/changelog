@@ -1,6 +1,6 @@
-gxde-daemon (1.0.3) UNRELEASED; urgency=medium
+gxde-daemon (1.0.3-1) UNRELEASED; urgency=medium
 
   * Add Wayland Support
-  * 
+  * fix: now we use all archi
 
  -- gfdgd_xi <3025613752@qq.com>  Sat, 02 Nov 2024 17:16:01 +0800
