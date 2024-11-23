@@ -1,3 +1,0 @@
-[D-BUS Service]
-Name=com.gxde.corneredge
-Exec=/usr/lib/gxde-daemon/gxde-corneredge-daemon

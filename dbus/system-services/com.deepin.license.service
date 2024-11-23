@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=com.deepin.license
+Exec=/usr/bin/env python3 /usr/libexec/gxde-daemon/gxde-fake-license.py
+User=root
