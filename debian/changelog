@@ -1,6 +1,7 @@
-gxde-daemon (1.0.3-1) UNRELEASED; urgency=medium
+gxde-daemon (1.1.0) UNRELEASED; urgency=medium
 
   * Add Wayland Support
   * fix: now we use all archi
+  * 支持设置热区
 
- -- gfdgd_xi <3025613752@qq.com>  Sat, 02 Nov 2024 17:16:01 +0800
+ -- gfdgd_xi <3025613752@qq.com>  Sat, 23 Nov 2024 20:51:19 +0800
