@@ -1,3 +1,3 @@
 [D-BUS Service]
-Name=com.gxde.corneredge
+Name=com.gxde.daemon.corneredge
 Exec=/usr/bin/env python3 /usr/libexec/gxde-daemon/gxde-corneredge-daemon.py

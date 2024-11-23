@@ -15,8 +15,8 @@ def ReadCornerEdge(place):
     edgeAction = ""
     with open(configPath, "r") as file:
         for i in file.read().splitlines():
-            if (place in i.split("=")[0]):
-                edgeAction = i.split("=")[1]
+            if (f"{place}Shell=" in i):
+                edgeAction = i.replace(f"{place}Shell=", "")
     return edgeAction
 
 def SetCornerEdge(place, action):
@@ -26,7 +26,7 @@ def SetCornerEdge(place, action):
 class ScreenEdge(object):
     """    
         <node>
-            <interface name='com.gxde.corneredge'>
+            <interface name='com.gxde.daemon.corneredge'>
                 <method name='SetBottomLeft'>
                     <arg type='s' name='action' direction='in'/>
                 </method>
@@ -86,5 +86,5 @@ class ScreenEdge(object):
     
 
 bus = pydbus.SessionBus()
-bus.publish("com.gxde.corneredge", ScreenEdge())
+bus.publish("com.gxde.daemon.corneredge", ScreenEdge())
 loop.run()
