@@ -21,6 +21,10 @@ def ReadCornerEdge(place):
 
 def SetCornerEdge(place, action):
     # 支持 TopLeft、TopRight、LowerLeft 和 LowerRight
+    if (action == ""):
+        # 如果为空则使用 --clear 参数
+        subprocess.Popen(["gxde-requ-setter", "--clear", place])
+        return
     subprocess.Popen(["gxde-requ-setter", "--set", place, action])
 
 class ScreenEdge(object):
