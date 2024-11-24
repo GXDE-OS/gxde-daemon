@@ -7,7 +7,7 @@ Build-Depends:
  debhelper-compat (= 13),
  python3-pydbus
 Standards-Version: 4.6.2
-Homepage: https://gitee.com/GXDE-OS/dde-daemon
+Homepage: https://gitee.com/GXDE-OS/gxde-daemon
 
 Package: gxde-daemon
 Architecture: all
