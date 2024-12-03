@@ -4,7 +4,7 @@
 <policyconfig>
     <vendor>gxde-app-upgrader</vendor>
     <icon_name>x-package-repository</icon_name>
-    <action id="top.gxde.gxde-daemon.gxde-dbus-launch">
+    <action id="org.gxde.gxde-daemon.gxde-root-launch">
         <description>运行 GXDE 需要权限</description>
         <message>要使用 GXDE 需要权限</message>
         <defaults>
@@ -12,7 +12,7 @@
             <allow_inactive>yes</allow_inactive>
             <allow_active>yes</allow_active>
         </defaults>
-        <annotate key="org.freedesktop.policykit.exec.path">/usr/libexec/gxde-daemon/gxde-dbus-launch.sh</annotate>
+        <annotate key="org.freedesktop.policykit.exec.path">/usr/libexec/gxde-daemon/gxde-root-launch.sh</annotate>
         <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
     </action>
 </policyconfig>
