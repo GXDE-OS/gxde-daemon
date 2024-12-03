@@ -6,3 +6,4 @@ gxde-daemon usr/libexec
 dbus/services usr/share/dbus-1
 dbus/system-services usr/share/dbus-1
 dbus/system.d etc/dbus-1
+k9/* /usr/share/gxde-k9/system/

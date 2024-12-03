@@ -1,8 +1,9 @@
-gxde-daemon (1.1.1) UNRELEASED; urgency=medium
+gxde-daemon (1.2.0) UNRELEASED; urgency=medium
 
   * Add Wayland Support
   * fix: now we use all archi
   * 支持设置热区
   * 修复热区dbus的一些问题
+  * Add depends: GXDE-K9
 
  -- gfdgd_xi <3025613752@qq.com>  Sun, 24 Nov 2024 12:33:43 +0800
