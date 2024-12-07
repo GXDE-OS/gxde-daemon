@@ -15,7 +15,7 @@ Depends:
  ${shlibs:Depends},
  ${misc:Depends},
  python3-pydbus,
- kwin-wayland,
+ dde-kwin | gxde-kwin,
  gxde-k9(>=1.4.0),
  policykit-1 | pkexec | polkit-1 | polkit,
 Description: GXDE Daemon
