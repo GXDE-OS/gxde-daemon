@@ -42,6 +42,9 @@ class AutoStartManager(object):
                 <method name='IsOpenBottomPanel'>
                     <arg type='b' name='action' direction='out'/>
                 </method>
+                <method name='IsOpenOrca'>
+                    <arg type='b' name='action' direction='out'/>
+                </method>
                 <method name='SetTopPanel'>
                     <arg type='b' name='action' direction='in'/>
                 </method>
@@ -49,6 +52,9 @@ class AutoStartManager(object):
                     <arg type='b' name='action' direction='in'/>
                 </method>
                 <method name='SetBottomPanel'>
+                    <arg type='b' name='action' direction='in'/>
+                </method>
+                <method name='SetOrca'>
                     <arg type='b' name='action' direction='in'/>
                 </method>
             </interface>
@@ -64,6 +70,9 @@ class AutoStartManager(object):
     def IsOpenBottomPanel(self):
         return IsAutoStartConfigExists("plank")
     
+    def IsOpenOrca(self):
+        return IsAutoStartConfigExists("orca")
+    
     def SetTopPanel(self, isTopPanel: bool):
         SetAutoStartConfig("gxde-top-panel", isTopPanel)
 
@@ -72,6 +81,9 @@ class AutoStartManager(object):
 
     def SetBottomPanel(self, value: bool):
         SetAutoStartConfig("plank", value)
+
+    def SetOrca(self, value: bool):
+        SetAutoStartConfig("orca", value)
 
 
 bus = pydbus.SessionBus()
