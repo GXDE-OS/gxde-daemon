@@ -3,5 +3,11 @@ set -e
 pkexec /usr/libexec/gxde-daemon/gxde-root-launch.sh
 # 引入环境变量
 export $(dbus-launch)
+# 写入 startdde 开启时间，用于计算程序运行时间
+mkdir -p /tmp/gxde-android
+date '+%s' > /tmp/gxde-android/gxde-starting-time-$(whoami)
+echo "1" > /tmp/gxde-android/isAndroid
 # 启动 GXDE
 startdde $*
+# 移除临时文件
+rm /tmp/gxde-android/gxde-starting-time-$(whoami)
