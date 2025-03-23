@@ -1,4 +1,4 @@
-gxde-daemon (1.2.2) UNRELEASED; urgency=medium
+gxde-daemon (1.2.3) UNRELEASED; urgency=medium
 
   * Add Wayland Support
   * fix: now we use all archi
@@ -7,5 +7,6 @@ gxde-daemon (1.2.2) UNRELEASED; urgency=medium
   * Add depends: GXDE-K9
   * remove kwin-wayland
   * 支持启用/禁用 gxde top panel、gxde 全局菜单、plank 等等
+  * 新增 Chroot 判断的 dbus 接口
 
- -- gfdgd_xi <3025613752@qq.com>  Sun, 05 Jan 2025 16:27:00 +0800
+ -- gfdgd_xi <3025613752@qq.com>  Sun, 23 Mar 2025 15:04:51 +0800
