@@ -1,14 +1,5 @@
-gxde-daemon (1.2.5) UNRELEASED; urgency=medium
+gxde-daemon (1.2.6) UNRELEASED; urgency=medium
 
-  * Add Wayland Support
-  * fix: now we use all archi
-  * 支持设置热区
-  * 修复热区dbus的一些问题
-  * Add depends: GXDE-K9
-  * remove kwin-wayland
-  * 支持启用/禁用 gxde top panel、gxde 全局菜单、plank 等等
-  * 新增 Chroot 判断的 dbus 接口
-  * 支持计算桌面开启时间（只限 Android）
-  * 支持禁用更新提示
+  * 新增用于读写配置的类
 
- -- gfdgd_xi <3025613752@qq.com>  Fri, 28 Mar 2025 22:40:01 +0800
+ -- gfdgd_xi <3025613752@qq.com>  Fri, 04 Apr 2025 12:03:32 +0800
