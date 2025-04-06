@@ -14,11 +14,16 @@ Architecture: all
 Depends:
  ${shlibs:Depends},
  ${misc:Depends},
+ ${python3:Depends}
  python3-pydbus,
  dde-kwin | gxde-kwin,
  gxde-k9(>=1.4.0),
  policykit-1 | pkexec | polkit-1 | polkit,
- python3-edgetts | espeak
+ python3-edgetts | espeak,
+ translate-shell,
+# python3-pocketsphinx,
+# python3-speech-recognition,
+# python3-pyaudio,
 Recommends:
  python3-edgetts
 Description: GXDE Daemon

@@ -1,5 +1,6 @@
-gxde-daemon (1.2.6) UNRELEASED; urgency=medium
+gxde-daemon (1.2.7) UNRELEASED; urgency=medium
 
   * 新增用于读写配置的类
+  * 新增翻译接口
 
- -- gfdgd_xi <3025613752@qq.com>  Fri, 04 Apr 2025 12:03:32 +0800
+ -- gfdgd_xi <3025613752@qq.com>  Sun, 06 Apr 2025 11:50:11 +0800

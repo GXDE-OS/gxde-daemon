@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=com.gxde.daemon.ai.translate
+Exec=/usr/bin/env python3 /usr/libexec/gxde-daemon/gxde-ai.py
