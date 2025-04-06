@@ -73,7 +73,7 @@ class AITranslate(object):
                         "-b", ":" + to_code, text],
                         check=True, capture_output=True,
                         timeout=10)
-        return result.stdout.decode()
+        return result.stdout.decode().replace("\\n", "\n")
     
     def LanguageCodeList(self):
         if (len(supportTranslateEngineList) <= 0):
