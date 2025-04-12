@@ -1,13 +1,33 @@
 #!/usr/bin/env python3
 import os
+import json
 import shutil
 import pydbus 
+import traceback
 import subprocess
 import gi.repository
 
 homePath = os.getenv("HOME")
 configDirPath = f"{homePath}/.local/share/GXDE/gxde-k9/slimy/"
 configSourcePath = "/usr/share/gxde-daemon/daemon-k9-conf/slimy/"
+
+# ~/.local/share/deepin/themes/deepin/light/decoration.json
+userKwinDecorationJson = {
+    "light": f"{homePath}/.local/share/deepin/themes/deepin/light/decoration.json",
+    "dark": f"{homePath}/.local/share/deepin/themes/deepin/dark/decoration.json"
+}
+
+kwinDecorationJson = {
+    "light": "/etc/xdg/deepin-decoration/light/decoration.json",
+    "dark": "/etc/xdg/deepin-decoration/dark/decoration.json"
+}
+
+for i in userKwinDecorationJson:
+    if (not os.path.exists(i)):
+        try:
+            os.makedirs(i)
+        except:
+            traceback.print_exc()
 
 def IsAutoStartConfigExists(name: str):
     return (os.path.exists(f"{homePath}/.config/autostart/{name}.desktop") or 
@@ -26,6 +46,40 @@ def SetAutoStartConfig(name: str, enable: bool):
         os.system(f"setsid '{name}' > /dev/null 2>&1 &")
         return
     os.system(f"killall '{name}'")
+
+def ModifyJsonRadiusData(data, radius: int):
+    radius = int(radius)
+    """递归遍历并修改所有层级的'rounded-corner-radius'值"""
+    if isinstance(data, dict):
+        for key in list(data.keys()):
+            if key == "rounded-corner-radius":
+                data[key] = f"{radius},{radius}"
+            if key == "shadowRadius":
+                data[key] = radius
+            if key == "blur":
+                data[key] = 4
+            if key == "shadowOffset":
+                data[key] = f"{radius},{radius}"
+            # 递归处理子元素
+            ModifyJsonRadiusData(data[key], radius)
+    elif isinstance(data, list):
+        for item in data:
+            ModifyJsonRadiusData(item, radius)
+    return data
+
+def KillallDeepinKwin():
+    os.system("killall deepin-kwin_x11 -9")
+
+def ReadJson(file_path):
+    """读取JSON文件并返回数据"""
+    with open(file_path, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+    return data
+
+def WriteJson(data, file_path):
+    """将修改后的数据写入JSON文件"""
+    with open(file_path, 'w', encoding='utf-8') as file:
+        json.dump(data, file, indent=2, ensure_ascii=False)
 
 loop = gi.repository.GLib.MainLoop()
 
@@ -57,6 +111,14 @@ class AutoStartManager(object):
                 <method name='SetOrca'>
                     <arg type='b' name='action' direction='in'/>
                 </method>
+                <method name='StopDeepinKwin'>
+                </method>
+                <method name='SetRadius'>
+                    <arg type='i' name='action' direction='in'/>
+                </method>
+                <method name='Radius'>
+                    <arg type='i' name='action' direction='out'/>
+                </method>
             </interface>
         </node>
     """
@@ -84,6 +146,22 @@ class AutoStartManager(object):
 
     def SetOrca(self, value: bool):
         SetAutoStartConfig("orca", value)
+
+    def StopDeepinKwin(self):
+        KillallDeepinKwin()
+
+    def SetRadius(self, radius: int):
+        for i in ["light", "dark"]:
+            json = ReadJson(kwinDecorationJson[i])
+            json = ModifyJsonRadiusData(json, radius)
+            WriteJson(json, userKwinDecorationJson[i])
+    
+    def Radius(self) -> int:
+        if (os.path.exists(userKwinDecorationJson["light"])):
+            json = ReadJson(userKwinDecorationJson["light"])
+        else:
+            json = ReadJson(kwinDecorationJson["light"])
+        return int(json["1001"]["rounded-corner-radius"].split(",")[0])
 
 
 bus = pydbus.SessionBus()
