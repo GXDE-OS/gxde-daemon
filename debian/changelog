@@ -1,8 +1,9 @@
-gxde-daemon (1.2.8) UNRELEASED; urgency=medium
+gxde-daemon (1.2.9) UNRELEASED; urgency=medium
 
   * 新增用于读写配置的类
   * 新增翻译接口
   * 修复翻译结果没有正常转义换行符的问题
   * 支持自定义窗口圆角大小
+  * 调整 kwin_wayland 为 deepin-kwin_wayland
 
- -- gfdgd_xi <3025613752@qq.com>  Sat, 12 Apr 2025 23:00:36 +0800
+ -- gfdgd_xi <3025613752@qq.com>  Sun, 13 Apr 2025 09:56:58 +0800
