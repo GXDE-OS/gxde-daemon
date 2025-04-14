@@ -22,10 +22,11 @@ kwinDecorationJson = {
     "dark": "/etc/xdg/deepin-decoration/dark/decoration.json"
 }
 
-for i in userKwinDecorationJson:
-    if (not os.path.exists(i)):
+for i in userKwinDecorationJson.values():
+    dirPath = os.path.dirname(i)
+    if (not os.path.exists(dirPath)):
         try:
-            os.makedirs(i)
+            os.makedirs(dirPath)
         except:
             traceback.print_exc()
 
