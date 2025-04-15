@@ -1,0 +1,17 @@
+[Desktop Entry]
+Type=Application
+Name=Multitasking View
+Name[ru]=Многозадачный вид
+Name[zh_CN]=多任务视图
+Name[zh_TW]=多工檢視
+Comment=View all open windows and workspaces
+Comment[ru]=Просмотр всех открытых окон и рабочих областей
+Comment[zh_CN]=查看所有打开的窗口和工作区
+Comment[zh_TW]=檢視所有開啟的視窗與工作區
+GenericName=Multitasking View
+Icon=deepin-multitasking-view
+Terminal=false
+Categories=GNOME;GTK;System;
+Exec=dbus-send --session --dest=com.deepin.wm --print-reply /com/deepin/wm com.deepin.wm.PerformAction int32:1
+OnlyShowIn=Deepin;
+X-AppStream-Ignore=true

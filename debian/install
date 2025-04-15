@@ -1,6 +1,7 @@
 bin usr
 misc/polkit-1 usr/share
 misc/wayland-sessions usr/share
+misc/applications usr/share
 libexec/gxde-daemon usr/libexec
 gxde-daemon usr/libexec
 dbus/services usr/share/dbus-1

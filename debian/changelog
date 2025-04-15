@@ -1,4 +1,4 @@
-gxde-daemon (1.2.10) UNRELEASED; urgency=medium
+gxde-daemon (1.2.11) UNRELEASED; urgency=medium
 
   * 新增用于读写配置的类
   * 新增翻译接口
@@ -6,5 +6,6 @@ gxde-daemon (1.2.10) UNRELEASED; urgency=medium
   * 支持自定义窗口圆角大小
   * 调整 kwin_wayland 为 deepin-kwin_wayland
   * 修复 HOME 目录开机自动生成 light dark 文件夹的问题
+  * 新增多桌面切换快捷方式
 
- -- gfdgd_xi <3025613752@qq.com>  Mon, 14 Apr 2025 21:58:39 +0800
+ -- gfdgd_xi <3025613752@qq.com>  Tue, 15 Apr 2025 22:43:23 +0800
