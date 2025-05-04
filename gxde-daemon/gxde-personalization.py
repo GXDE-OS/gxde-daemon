@@ -120,6 +120,12 @@ class AutoStartManager(object):
                 <method name='Radius'>
                     <arg type='i' name='action' direction='out'/>
                 </method>
+                <method name='IsDockUseMacMode'>
+                    <arg type='b' name='action' direction='out'/>
+                </method>
+                <method name='SetDockUseMacMode'>
+                    <arg type='b' name='action' direction='in'/>
+                </method>
             </interface>
         </node>
     """
@@ -163,6 +169,26 @@ class AutoStartManager(object):
         else:
             json = ReadJson(kwinDecorationJson["light"])
         return int(json["1001"]["rounded-corner-radius"].split(",")[0])
+    
+    def IsDockUseMacMode(self) -> bool:
+        return os.path.exists(f"{homePath}/.config/GXDE/gxde-dock/mac-mode")
+
+    def SetDockUseMacMode(self, option):
+        configPath = f"{homePath}/.config/GXDE/gxde-dock/mac-mode"
+        if (option):
+            # 禁用任务栏插件
+            if (os.path.exists(configPath)):
+                return
+            with open(configPath, "w") as file:
+                file.write("1")
+            # 重启任务栏
+            os.system("killall dde-dock -9")
+            return
+        # 启用任务栏插件
+        if (not os.path.exists(configPath)):
+            return
+        os.remove(configPath)
+        os.system("killall dde-dock -9")
 
 
 bus = pydbus.SessionBus()
