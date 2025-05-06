@@ -175,6 +175,9 @@ class AutoStartManager(object):
 
     def SetDockUseMacMode(self, option):
         configPath = f"{homePath}/.config/GXDE/gxde-dock/mac-mode"
+        configDirPath = os.path.dirname(configPath)
+        if (not os.path.exists(configDirPath)):
+            os.makedirs(configDirPath)
         if (option):
             # 禁用任务栏插件
             if (os.path.exists(configPath)):

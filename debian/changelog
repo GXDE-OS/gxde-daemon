@@ -1,4 +1,4 @@
-gxde-daemon (1.2.13) UNRELEASED; urgency=medium
+gxde-daemon (1.2.14) UNRELEASED; urgency=medium
 
   * 新增用于读写配置的类
   * 新增翻译接口
@@ -8,6 +8,6 @@ gxde-daemon (1.2.13) UNRELEASED; urgency=medium
   * 修复 HOME 目录开机自动生成 light dark 文件夹的问题
   * 新增多桌面切换快捷方式
   * 支持启用任务栏 Mac 模式
-  * 忘记加开启 dock 栏的部分了
+  * 修复任务栏 Mac 模式无法启用的问题
 
  -- gfdgd_xi <3025613752@qq.com>  Sun, 04 May 2025 21:44:32 +0800
