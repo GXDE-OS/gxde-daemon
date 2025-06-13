@@ -1,4 +1,4 @@
-gxde-daemon (1.2.14) UNRELEASED; urgency=medium
+gxde-daemon (1.2.14-1) UNRELEASED; urgency=medium
 
   * 新增用于读写配置的类
   * 新增翻译接口
@@ -9,5 +9,6 @@ gxde-daemon (1.2.14) UNRELEASED; urgency=medium
   * 新增多桌面切换快捷方式
   * 支持启用任务栏 Mac 模式
   * 修复任务栏 Mac 模式无法启用的问题
+  * _android 不再使用pkexec启动
 
  -- gfdgd_xi <3025613752@qq.com>  Sun, 04 May 2025 21:44:32 +0800
