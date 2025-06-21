@@ -16,7 +16,7 @@ Depends:
  ${misc:Depends},
  ${python3:Depends}
  python3-pydbus,
- dde-kwin | gxde-kwin,
+ dde-kwin | gxde-kwin | gxde-wm-shim,
  gxde-k9(>=1.4.0),
  policykit-1 | pkexec | polkit-1 | polkit,
  python3-edgetts | espeak,
