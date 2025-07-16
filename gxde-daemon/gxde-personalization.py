@@ -185,15 +185,15 @@ class AutoStartManager(object):
             with open(configPath, "w") as file:
                 file.write("1")
             # 重启任务栏
-            os.system("killall dde-dock -9")
-            os.system(f"setsid 'dde-dock' > /dev/null 2>&1 &")
+            os.system("killall gxde-dock -9")
+            os.system(f"setsid 'gxde-dock' > /dev/null 2>&1 &")
             return
         # 启用任务栏插件
         if (not os.path.exists(configPath)):
             return
         os.remove(configPath)
-        os.system("killall dde-dock -9")
-        os.system(f"setsid 'dde-dock' > /dev/null 2>&1 &")
+        os.system("killall gxde-dock -9")
+        os.system(f"setsid 'gxde-dock' > /dev/null 2>&1 &")
 
 
 bus = pydbus.SessionBus()
