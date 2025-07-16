@@ -1,4 +1,4 @@
-gxde-daemon (1.2.16) UNRELEASED; urgency=medium
+gxde-daemon (1.2.17) UNRELEASED; urgency=medium
 
   * 新增用于读写配置的类
   * 新增翻译接口
@@ -13,5 +13,6 @@ gxde-daemon (1.2.16) UNRELEASED; urgency=medium
   * 补充依赖 gxde-wm-shim
   * 临时去掉python-edgetts依赖，改变kwin推荐顺序
   * 修复任务栏开/关闭Mac样式无效的问题 https://gitee.com/GXDE-OS/GXDE/issues/ICKAAI
+  * 翻译接口支持自动识别目标语言
 
- -- gfdgd_xi <3025613752@qq.com>  Wed, 16 Jul 2025 11:35:18 +0800
+ -- gfdgd_xi <3025613752@qq.com>  Wed, 16 Jul 2025 17:16:22 +0800

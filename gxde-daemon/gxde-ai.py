@@ -69,7 +69,13 @@ class AITranslate(object):
     def Translate(self, text, to_code):
         if (len(supportTranslateEngineList) <= 0):
             return None
-        result = subprocess.run(["trans", "-e", m_configManager.read("UseTranslateEngine"),
+        if (to_code == "Auto"):
+            result = subprocess.run(["trans", "-e", m_configManager.read("UseTranslateEngine"),
+                        "-b", text],
+                        check=True, capture_output=True,
+                        timeout=10)
+        else:
+            result = subprocess.run(["trans", "-e", m_configManager.read("UseTranslateEngine"),
                         "-b", ":" + to_code, text],
                         check=True, capture_output=True,
                         timeout=10)
@@ -83,12 +89,16 @@ class AITranslate(object):
     def LanguageNameList(self):
         if (len(supportTranslateEngineList) <= 0):
             return None
-        return subprocess.getoutput("trans -list-languages").splitlines()
+        nameList = subprocess.getoutput("trans -list-languages").splitlines()
+        nameList.insert(0, "Auto")
+        return nameList
     
     def LanguageEnglishNameList(self):
         if (len(supportTranslateEngineList) <= 0):
             return None
-        return subprocess.getoutput("trans -list-languages-english").splitlines()
+        nameList = subprocess.getoutput("trans -list-languages-english").splitlines()
+        nameList.insert(0, "Auto")
+        return nameList
 
 class AISpeaker(object):
     """    
