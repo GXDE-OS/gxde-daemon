@@ -1,4 +1,4 @@
-gxde-daemon (1.2.18) UNRELEASED; urgency=medium
+gxde-daemon (1.2.19) UNRELEASED; urgency=medium
 
   * 新增用于读写配置的类
   * 新增翻译接口
@@ -15,5 +15,6 @@ gxde-daemon (1.2.18) UNRELEASED; urgency=medium
   * 修复任务栏开/关闭Mac样式无效的问题 https://gitee.com/GXDE-OS/GXDE/issues/ICKAAI
   * 翻译接口支持自动识别目标语言
   * 使用 mutter 作为 Wayland 的窗管
+  * 设置 mutter 为推荐依赖
 
- -- gfdgd_xi <3025613752@qq.com>  Sun, 17 Aug 2025 08:17:48 +0800
+ -- gfdgd_xi <3025613752@qq.com>  Sat, 06 Sep 2025 19:09:47 +0800
