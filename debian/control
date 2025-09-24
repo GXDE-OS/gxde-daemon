@@ -21,6 +21,7 @@ Depends:
  policykit-1 | pkexec | polkit-1 | polkit,
  espeak,
  translate-shell,
+ xbacklight,
 # python3-pocketsphinx,
 # python3-speech-recognition,
 # python3-pyaudio,

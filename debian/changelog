@@ -1,4 +1,4 @@
-gxde-daemon (1.2.19) UNRELEASED; urgency=medium
+gxde-daemon (1.2.20) UNRELEASED; urgency=medium
 
   * 新增用于读写配置的类
   * 新增翻译接口
@@ -16,5 +16,6 @@ gxde-daemon (1.2.19) UNRELEASED; urgency=medium
   * 翻译接口支持自动识别目标语言
   * 使用 mutter 作为 Wayland 的窗管
   * 设置 mutter 为推荐依赖
+  * 依赖 xbacklight
 
- -- gfdgd_xi <3025613752@qq.com>  Sat, 06 Sep 2025 19:09:47 +0800
+ -- gfdgd_xi <3025613752@qq.com>  Wed, 24 Sep 2025 20:44:35 +0800
