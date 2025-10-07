@@ -8,7 +8,7 @@ export GDK_BACKEND=x11
 unset WAYLAND_DISPLAY
 # Loading X11 Service
 echo Load Xephyr
-Xephyr -br -ac -noreset -resizeable :1 &
+Xephyr -br -ac -noreset -resizeable -title "GXDE OS" :1 &
 # Reset $DISPLAY
 export DISPLAY=:1
 while (( ! -f /tmp/.X11-unix/X1 ))

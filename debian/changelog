@@ -1,4 +1,4 @@
-gxde-daemon (1.2.21) UNRELEASED; urgency=medium
+gxde-daemon (1.2.22) UNRELEASED; urgency=medium
 
   * 新增用于读写配置的类
   * 新增翻译接口
@@ -18,5 +18,8 @@ gxde-daemon (1.2.21) UNRELEASED; urgency=medium
   * 设置 mutter 为推荐依赖
   * Depend brightnessctl replace xbacklight
   * Add startgxde_wsl to support wsl user
+  * Change startgxde_wsl title
 
-   -- gfdgd xi <3025613752@qq.com>  Tue, 07 Oct 2025 10:16:40 +0800
+   -- gfdgd xi <3025613752@qq.com>  Tue, 07 Oct 2025 10:16:40 +0800  * 
+
+ -- DESKTOP-9SI6L33 <root@DESKTOP-9SI6L33.localdomain>  Tue, 07 Oct 2025 15:53:28 +0800
