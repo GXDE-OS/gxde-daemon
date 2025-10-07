@@ -1,0 +1,11 @@
+#!/bin/bash
+# Loading environment
+export XDG_SESSION_TYPE=x11
+export GDK_PLATFORM=x11
+export GDK_BACKEND=x11
+unset WAYLAND_DISPLAY
+# Loading X11 Service
+Xephyr -br -ac -noreset -resizeable :1 &
+# Reset $DISPLAY
+export DISPLAY=:1
+dbus-launch --exit-with-session startgxde
