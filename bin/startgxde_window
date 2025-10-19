@@ -1,0 +1,18 @@
+#!/bin/bash
+# Loading environment
+export XDG_SESSION_TYPE=x11
+export GDK_PLATFORM=x11
+export GDK_BACKEND=x11
+unset WAYLAND_DISPLAY
+# Loading X11 Service
+echo Load Xephyr
+Xephyr -br -ac -noreset -resizeable -title "GXDE OS" :1 &
+# Reset $DISPLAY
+export DISPLAY=:1
+while (( ! -f /tmp/.X11-unix/X1 ))
+do
+    sleep 0.1
+done
+echo Find Display :1
+echo Load GXDE Desktop
+dbus-launch --exit-with-session startgxde
