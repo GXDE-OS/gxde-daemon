@@ -1,4 +1,9 @@
 #!/bin/bash
 # Remount /tmp/.X11-unix
 sudo mount -o rw,remount /tmp/.X11-unix
+# Loading environment
+export XDG_SESSION_TYPE=x11
+export GDK_PLATFORM=x11
+export GDK_BACKEND=x11
+unset WAYLAND_DISPLAY
 startgxde_window
