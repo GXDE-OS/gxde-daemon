@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=com.gxde.daemon.power
+Exec=/usr/bin/env python3 /usr/libexec/gxde-daemon/gxde-power.py
+User=root

@@ -9,3 +9,4 @@ dbus/system-services usr/share/dbus-1
 dbus/system.d etc/dbus-1
 k9/system/* usr/share/gxde-k9/system/
 k9/disable/* usr/share/gxde-daemon/daemon-k9-conf
+systemd etc/

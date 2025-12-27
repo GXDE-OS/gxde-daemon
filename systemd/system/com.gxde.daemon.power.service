@@ -1,0 +1,11 @@
+[Unit]
+Description=XDE Power Monitor Service
+
+[Service]
+Type=dbus
+BusName=com.gxde.daemon.power
+ExecStart=/usr/bin/env python3 /usr/libexec/gxde-daemon/gxde-power.py
+
+[Install]
+WantedBy=multi-user.target
+Alias=com.gxde.daemon.power
