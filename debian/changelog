@@ -1,4 +1,4 @@
-gxde-daemon (1.2.25) UNRELEASED; urgency=medium
+gxde-daemon (1.2.26) UNRELEASED; urgency=medium
 
   * 调整 startgxde_wsl 实现
   * 新增用于读写配置的类
@@ -22,5 +22,6 @@ gxde-daemon (1.2.25) UNRELEASED; urgency=medium
   * Change startgxde_wsl title
   * 修复 wsl 下运行提示语法错误的问题
   * 新增设置 CPU 工作模式的接口
+  * 支持获取支持的 CPU 工作模式列表
 
- -- gfdgd_xi <3025613752@qq.com>  Sat, 27 Dec 2025 15:18:14 +0800
+ -- gfdgd_xi <3025613752@qq.com>  Sat, 27 Dec 2025 22:33:30 +0800

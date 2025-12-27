@@ -19,6 +19,9 @@ class CPU(object):
 	"""	
 		<node>
 			<interface name='com.gxde.daemon.power.cpu'>
+				<method name='GetGovernorList'>
+					<arg type='as' name='action' direction='out'/>
+				</method>
 				<method name='Governor'>
 					<arg type='s' name='action' direction='out'/>
 				</method>
@@ -28,6 +31,15 @@ class CPU(object):
 			</interface>
 		</node>
 	"""
+	def GetGovernorList(self):
+		path = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors"
+		if (not os.path.exists(path)):
+			return []
+		with open(path, "r") as file:
+			data = file.read()
+		data = data.replace("\n", "").replace("  ", " ")
+		return data.split(" ")
+		
 	def Governor(self):
 		if (not os.path.exists("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")):
 			return "powersave"
@@ -42,6 +54,10 @@ class CPU(object):
 			file.write(governor)
 		SetCPUGovernor(governor)
 
+# 检测是否以 root 运行
+if (os.geteuid() != 0): 
+	print("Please run with root!")
+	exit(1)
 if (os.path.exists("/etc/GXDE/com.gxde.daemon.power/governor")):
 	with open("/etc/GXDE/com.gxde.daemon.power/governor", "r") as file:
 		SetCPUGovernor(file.read().replace("\n", ""))
