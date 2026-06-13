@@ -1,4 +1,4 @@
 #!/bin/bash
-export XDG_SESSION_TYPE=xwayland
-export DTK2_XWAYLAND=dxcb
-mutter --wayland startdde
+export XDG_SESSION_TYPE=wayland
+#export DTK2_XWAYLAND=dxcb
+kylin-wlcom -s startdde

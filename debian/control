@@ -23,10 +23,10 @@ Depends:
  translate-shell,
  xserver-xephyr,
  brightnessctl,
+ kylin-wayland-compositor,
 # python3-pocketsphinx,
 # python3-speech-recognition,
 # python3-pyaudio,
 Recommends:
  python3-edgetts,
- mutter,
 Description: GXDE Daemon
