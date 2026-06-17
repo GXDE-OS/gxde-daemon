@@ -23,7 +23,7 @@ Depends:
  translate-shell,
  xserver-xephyr,
  brightnessctl,
- kylin-wayland-compositor,
+ gxde-wlcom,
 # python3-pocketsphinx,
 # python3-speech-recognition,
 # python3-pyaudio,
