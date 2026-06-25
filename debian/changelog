@@ -1,4 +1,4 @@
-gxde-daemon (1.2.28) UNRELEASED; urgency=medium
+gxde-daemon (1.2.29) UNRELEASED; urgency=medium
 
   * 调整 startgxde_wsl 实现
   * 新增用于读写配置的类
@@ -24,5 +24,6 @@ gxde-daemon (1.2.28) UNRELEASED; urgency=medium
   * 新增设置 CPU 工作模式的接口
   * 支持获取支持的 CPU 工作模式列表
   * Wayland 默认使用 gxde-wlcom 而非 mutter
+  * 修复快速调用 SetTopPanel 等函数时启动多个应用实例
 
- -- gfdgd_xi <3025613752@qq.com>  Wed, 17 Jun 2026 09:54:51 +0800
+ -- gfdgd_xi <3025613752@qq.com>  Thu, 25 Jun 2026 18:44:13 +0800

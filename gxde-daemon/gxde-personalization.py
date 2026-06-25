@@ -41,12 +41,12 @@ def SetAutoStartConfig(name: str, enable: bool):
     if (os.path.exists(f"{configDirPath}/{name}.slimy")):
         os.remove(f"{configDirPath}/{name}.slimy")
 
+    os.system(f"killall '{name}'")
     if (enable):
         shutil.copy(f"{configSourcePath}/{name}.slimy",
                     f"{configDirPath}/{name}.slimy")
         os.system(f"setsid '{name}' > /dev/null 2>&1 &")
         return
-    os.system(f"killall '{name}'")
 
 def ModifyJsonRadiusData(data, radius: int):
     radius = int(radius)
