@@ -79,6 +79,20 @@ if [[ -n "$NEW_PID" && -e "/proc/$NEW_PID" ]]; then
     echo "$NEW_PID" > "$PID_FILE"
     echo "[$PROCESS_NAME] 目标进程启动成功，PID: $NEW_PID"
 else
-    echo "[$PROCESS_NAME] 错误：目标进程启动失败！"
-    exit 1
+    echo "[$PROCESS_NAME] 错误：目标进程启动失败！尝试禁用 XShm"
+    # 部分环境（如小小电脑、Chroot）不支持 XShm，尝试禁用 XShm 后再次启动
+    if [[ -f ~/.vnc/passwd ]]; then
+	    "$TARGET_PROCESS" --forever -rfbauth -noshm ~/.vnc/passwd &
+        NEW_PID=$!
+    else
+	    "$TARGET_PROCESS" --forever -noshm &  # 免密
+        NEW_PID=$!
+    fi
+    if [[ -n "$NEW_PID" && -e "/proc/$NEW_PID" ]]; then
+        echo "$NEW_PID" > "$PID_FILE"
+        echo "[$PROCESS_NAME] 目标进程启动成功，PID: $NEW_PID"
+    else
+        echo "[$PROCESS_NAME] 错误：目标进程启动失败！"
+        exit 1
+    fi
 fi

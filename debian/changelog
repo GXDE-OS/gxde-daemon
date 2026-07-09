@@ -1,4 +1,4 @@
-gxde-daemon (1.2.29) UNRELEASED; urgency=medium
+gxde-daemon (1.2.30) UNRELEASED; urgency=medium
 
   * 调整 startgxde_wsl 实现
   * 新增用于读写配置的类
@@ -25,5 +25,6 @@ gxde-daemon (1.2.29) UNRELEASED; urgency=medium
   * 支持获取支持的 CPU 工作模式列表
   * Wayland 默认使用 gxde-wlcom 而非 mutter
   * 修复快速调用 SetTopPanel 等函数时启动多个应用实例
+  * 小小电脑下使用 VNC 远程支持禁用 XShm，修复无法正确启用 VNC 远程的问题
 
- -- gfdgd_xi <3025613752@qq.com>  Thu, 25 Jun 2026 18:44:13 +0800
+ -- gfdgd_xi <3025613752@qq.com>  Thu, 09 Jul 2026 09:27:52 +0800
