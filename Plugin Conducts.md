@@ -93,39 +93,38 @@
 | 10   | `com.deepin.daemon.Gesture`          | `input-gesture`   | `top.gxde.input.gesture`  | 手势识别（注意：system bus 也有同名）  |
 | 11   | `com.deepin.daemon.Timedate`         | `timedate`        | `top.gxde.timedate`       | 时区 / NTP（会话侧）                   |
 | 12   | `com.deepin.daemon.Bluetooth`        | `bluetooth`       | `top.gxde.bluetooth`      | 蓝牙管理                               |
-| 13   | `com.deepin.daemon.Zone`             | `screenedge`      | `top.gxde.screenedge`     | 屏幕热角（注意：gxde 已有 corneredge） |
-| 14   | `com.deepin.daemon.Fprintd`          | `fprintd`         | `top.gxde.fprintd`        | 指纹识别                               |
-| 15   | `com.deepin.daemon.Mime`             | `mime`            | `top.gxde.mime`           | MIME 类型 / 默认应用                   |
-| 16   | `com.deepin.daemon.Miracast`         | `miracast`        | `top.gxde.miracast`       | 无线投屏                               |
-| 17   | `com.deepin.daemon.SystemInfo`       | `sysinfo`         | `top.gxde.sysinfo`        | 磁盘 / 内存 / 系统信息                 |
-| 18   | `com.deepin.LastoreSessionHelper`    | `lastore`         | `top.gxde.lastore`        | 应用商店会话助手                       |
-| 19   | `com.deepin.daemon.Network`          | `network`         | `top.gxde.network`        | 网络管理（会话侧）                     |
-| 20   | `com.deepin.dde.daemon.Dock`         | `dock`            | `top.gxde.dock`           | Dock 任务栏                            |
-| 21   | `com.deepin.dde.TrayManager`         | `trayicon`        | `top.gxde.trayicon`       | 系统托盘管理                           |
-| 22   | `com.deepin.api.XEventMonitor`       | `x-event-monitor` | `top.gxde.xeventmonitor`  | X11 事件监控                           |
-| 23   | `com.deepin.daemon.Grub2`            | `grub-gfx`        | `top.gxde.grubgfx`        | GRUB 主题                              |
+| 13   | `com.deepin.daemon.Fprintd`          | `fprintd`         | `top.gxde.fprintd`        | 指纹识别                               |
+| 14   | `com.deepin.daemon.Mime`             | `mime`            | `top.gxde.mime`           | MIME 类型 / 默认应用                   |
+| 15   | `com.deepin.daemon.Miracast`         | `miracast`        | `top.gxde.miracast`       | 无线投屏                               |
+| 16   | `com.deepin.daemon.SystemInfo`       | `sysinfo`         | `top.gxde.sysinfo`        | 磁盘 / 内存 / 系统信息                 |
+| 17   | `com.deepin.LastoreSessionHelper`    | `lastore`         | `top.gxde.lastore`        | 应用商店会话助手                       |
+| 18   | `com.deepin.daemon.Network`          | `network`         | `top.gxde.network`        | 网络管理（会话侧）                     |
+| 19   | `com.deepin.dde.daemon.Dock`         | `dock`            | `top.gxde.dock`           | Dock 任务栏                            |
+| 20   | `com.deepin.dde.TrayManager`         | `trayicon`        | `top.gxde.trayicon`       | 系统托盘管理                           |
+| 21   | `com.deepin.api.XEventMonitor`       | `x-event-monitor` | `top.gxde.xeventmonitor`  | X11 事件监控                           |
+| 22   | `com.deepin.daemon.Grub2`            | `grub-gfx`        | `top.gxde.grubgfx`        | GRUB 主题                              |
 
 #### 系统 Bus (dde-system-daemon 内的模块)
 
 | #    | deepin service name                 | 建议插件目录名   | 新 bus name               | 说明                    |
 | ---- | ----------------------------------- | ---------------- | ------------------------- | ----------------------- |
-| 24   | `com.deepin.daemon.Accounts`        | `accounts`       | `top.gxde.accounts`       | 账户管理 (System)       |
-| 25   | `com.deepin.daemon.Apps`            | `apps`           | `top.gxde.apps`           | 应用监控 (System)       |
-| 26   | `com.deepin.system.Power`           | `power-system`   | `top.gxde.power.system`   | CPU调度 / 电源 (System) |
-| 27   | `com.deepin.system.Network`         | `network-system` | `top.gxde.network.system` | 网络管理 (System)       |
-| 28   | `com.deepin.daemon.SwapSchedHelper` | `swapsched`      | `top.gxde.swapsched`      | 交换分区调度 (System)   |
-| 29   | `com.deepin.daemon.Timedated`       | `timedated`      | `top.gxde.timedated`      | 时区 / NTP (System)     |
+| 23   | `com.deepin.daemon.Accounts`        | `accounts`       | `top.gxde.accounts`       | 账户管理 (System)       |
+| 24   | `com.deepin.daemon.Apps`            | `apps`           | `top.gxde.apps`           | 应用监控 (System)       |
+| 25   | `com.deepin.system.Power`           | `power-system`   | `top.gxde.power.system`   | CPU调度 / 电源 (System) |
+| 26   | `com.deepin.system.Network`         | `network-system` | `top.gxde.network.system` | 网络管理 (System)       |
+| 27   | `com.deepin.daemon.SwapSchedHelper` | `swapsched`      | `top.gxde.swapsched`      | 交换分区调度 (System)   |
+| 28   | `com.deepin.daemon.Timedated`       | `timedated`      | `top.gxde.timedated`      | 时区 / NTP (System)     |
 
 #### bin/ 目录下的独立 daemon
 
 | #    | deepin service name                  | 建议插件目录名   | 新 bus name              | 说明              |
 | ---- | ------------------------------------ | ---------------- | ------------------------ | ----------------- |
-| 30   | `com.deepin.dde.LockService`         | `lockservice`    | `top.gxde.lockservice`   | 锁屏服务          |
-| 31   | `com.deepin.daemon.helper.Backlight` | `backlight`      | `top.gxde.backlight`     | 背光辅助 (System) |
-| 32   | `com.deepin.daemon.Search`           | `search`         | `top.gxde.search`        | 桌面搜索          |
-| 33   | `com.deepin.daemon.Grub2`            | `grub2`          | `top.gxde.grub2`         | GRUB 配置管理     |
-| 34   | `com.deepin.daemon.LangSelector`     | `langselector`   | `top.gxde.langselector`  | 语言选择器        |
-| 35   | `com.deepin.daemon.Greeter`          | `greeter-setter` | `top.gxde.greetersetter` | 登录界面设置      |
+| 29   | `com.deepin.dde.LockService`         | `lockservice`    | `top.gxde.lockservice`   | 锁屏服务          |
+| 30   | `com.deepin.daemon.helper.Backlight` | `backlight`      | `top.gxde.backlight`     | 背光辅助 (System) |
+| 31   | `com.deepin.daemon.Search`           | `search`         | `top.gxde.search`        | 桌面搜索          |
+| 32   | `com.deepin.daemon.Grub2`            | `grub2`          | `top.gxde.grub2`         | GRUB 配置管理     |
+| 33   | `com.deepin.daemon.LangSelector`     | `langselector`   | `top.gxde.langselector`  | 语言选择器        |
+| 34   | `com.deepin.daemon.Greeter`          | `greeter-setter` | `top.gxde.greetersetter` | 登录界面设置      |
 
 ---
 
@@ -142,8 +141,8 @@ gxde-daemon 已有以下插件，其中 3 个与 deepin-daemon 功能重叠：
 #### 冲突 2：screenedge vs corneredge
 
 - gxde 现有：`plugins/corneredge/gxde-corneredge` → `top.gxde.corneredge`
-- deepin：`com.deepin.daemon.Zone` → 屏幕热角
-- **处理**：创建独立插件 `screenedge` → `top.gxde.screenedge`，同时兼容 `com.deepin.daemon.Zone`。gxde 的 corneredge 保持不变
+- deepin：`com.deepin.daemon.Zone` → 屏幕热角（**已废弃**）
+- **处理**：`com.deepin.daemon.Zone` 已废弃，不再迁移，也不创建 `screenedge` 插件。屏幕热角功能由 gxde 现有的 corneredge 提供，保持不变
 
 #### 冲突 3：system-info vs sysinfo
 
