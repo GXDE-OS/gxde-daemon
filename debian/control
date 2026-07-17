@@ -5,12 +5,22 @@ Maintainer: gfdgd_xi <3025613752@qq.com>
 Rules-Requires-Root: no
 Build-Depends:
  debhelper-compat (= 13),
- python3-pydbus
+ python3-pydbus,
+ cmake,
+ pkg-config,
+ libglib2.0-dev,
+ libcjson-dev,
+ libgdk-pixbuf-2.0-dev,
+ libwayland-dev,
+ gxde-wlcom-client,
+ libxcb1-dev,
+ libxcb-ewmh-dev,
+ libxcb-icccm4-dev
 Standards-Version: 4.6.2
 Homepage: https://gitee.com/GXDE-OS/gxde-daemon
 
 Package: gxde-daemon
-Architecture: all
+Architecture: any
 Depends:
  ${shlibs:Depends},
  ${misc:Depends},
@@ -24,6 +34,7 @@ Depends:
  xserver-xephyr,
  brightnessctl,
  gxde-wlcom,
+ grim,
 # python3-pocketsphinx,
 # python3-speech-recognition,
 # python3-pyaudio,

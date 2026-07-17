@@ -4,23 +4,30 @@
 # Output every command that modifies files on the build system.
 #export DH_VERBOSE = 1
 
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
-# See FEATURE AREAS in dpkg-buildflags(1).
-#export DEB_BUILD_MAINT_OPTIONS = hardening=+all
-
-# See ENVIRONMENT in dpkg-buildflags(1).
-# Package maintainers to append CFLAGS.
-#export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
-# Package maintainers to append LDFLAGS.
-#export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
-
+DOCK_SRC = plugins/dock
+DM_SRC = plugins/daemon-manager
+PKGDIR = debian/gxde-daemon
 
 %:
 	dh $@
 
+# No CMake project at the repository root; the compiled plugins live in
+# subdirectories and are built explicitly below.
+override_dh_auto_configure:
 
-# dh_make generated override targets.
-# This is an example for Cmake (see <https://bugs.debian.org/641051>).
-#override_dh_auto_configure:
-#	dh_auto_configure -- \
-#	-DCMAKE_LIBRARY_PATH=$(DEB_HOST_MULTIARCH)
+override_dh_auto_build:
+	cmake -S $(DOCK_SRC) -B $(DOCK_SRC)/build -DCMAKE_BUILD_TYPE=Release
+	cmake --build $(DOCK_SRC)/build -j$$(nproc)
+	cmake -S $(DM_SRC) -B $(DM_SRC)/build -DCMAKE_BUILD_TYPE=Release
+	cmake --build $(DM_SRC)/build -j$$(nproc)
+
+override_dh_auto_install:
+	install -Dm755 $(DOCK_SRC)/build/gxde-dock \
+		$(PKGDIR)/usr/libexec/gxde-daemon/dock/gxde-dock
+	install -Dm755 $(DM_SRC)/build/gxde-daemon-manager \
+		$(PKGDIR)/usr/libexec/gxde-daemon/daemon-manager/gxde-daemon-manager
+
+override_dh_auto_clean:
+	rm -rf $(DOCK_SRC)/build $(DM_SRC)/build

@@ -26,6 +26,8 @@ build*/
 # vim tmp file
 *.swp
 
+# IDE & Clangd
 *.vscode
+.cache/
 
 *.pyc

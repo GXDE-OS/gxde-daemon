@@ -239,16 +239,27 @@ Exec=/usr/libexec/gxde-daemon/<plugin>/gxde-<plugin>
 
 ```json
 {
-    "name": "<plugin-name>",
-    "description": "功能描述",
-    "version": "1.0",
-    "bus_names": ["top.gxde.xxx", "com.deepin.daemon.OriginalName"],
-    "exec": "/usr/libexec/gxde-daemon/<plugin>/gxde-<plugin>",
-    "maintainer": "gxde-daemon"
+    "name": "插件的唯一标识名，用于管理器识别插件用，可以和二进制名称不同",
+    "description": "插件能力的详细描述",
+    "version": "插件版本",
+    "bus_names": ["数组，插件占据的D-Bus接口"],
+    "exec": "插件二进制的绝对路径",
+    "maintainer": "维护者信息",
+    "restart": true,
+    "resident": false
 }
 ```
 
----
+##### Restart与Resident
+
+| 字段        | 默认  | 含义                                                                     |
+| ----------- | ----- | ------------------------------------------------------------------------ |
+| `restart`   | `true`  | 进程退出后是否自动重启                                                  |
+| `resident`  | `false` | 是否常驻：常驻情况下不会随着manager退出，不会随着manager被一起kill |
+
+**注意**: manager会随着用户登出而退出，如果你想要插件常驻则必须开启`resident`，新daemon启动时会自动收养这个开启`resident`进程。
+
+
 
 ### 四、实现策略
 

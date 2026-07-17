@@ -1,0 +1,9 @@
+{
+    "name": "daemon-manager",
+    "description": "GXDE Daemon plugin manager (beta)",
+    "version": "0.8-unstable",
+    "bus_names": ["top.gxde.daemon.manager"],
+    "exec": "/usr/libexec/gxde-daemon/daemon-manager/gxde-daemon-manager",
+    "maintainer": "CharOfString <root@charofstring.cc>",
+    "restart": false
+}

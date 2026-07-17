@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=top.gxde.dock
+Exec=/usr/libexec/gxde-daemon/dock/gxde-dock-daemon

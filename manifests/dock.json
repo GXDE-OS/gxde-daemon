@@ -1,0 +1,10 @@
+{
+    "name": "dock",
+    "description": "GXDE Dock's neo backend (beta)",
+    "version": "0.7-unstable",
+    "bus_names": ["top.gxde.dock"],
+    "exec": "/usr/libexec/gxde-daemon/dock/gxde-dock-daemon",
+    "maintainer": "CharOfString <root@charofstring.cc>",
+    "restart": true,
+    "resident": false
+}
