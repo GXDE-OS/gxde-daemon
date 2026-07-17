@@ -24,8 +24,8 @@ override_dh_auto_build:
 	cmake --build $(DM_SRC)/build -j$$(nproc)
 
 override_dh_auto_install:
-	install -Dm755 $(DOCK_SRC)/build/gxde-dock \
-		$(PKGDIR)/usr/libexec/gxde-daemon/dock/gxde-dock
+	install -Dm755 $(DOCK_SRC)/build/gxde-dock-daemon \
+		$(PKGDIR)/usr/libexec/gxde-daemon/dock/gxde-dock-daemon
 	install -Dm755 $(DM_SRC)/build/gxde-daemon-manager \
 		$(PKGDIR)/usr/libexec/gxde-daemon/daemon-manager/gxde-daemon-manager
 
