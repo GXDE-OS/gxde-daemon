@@ -1,0 +1,7 @@
+#!/bin/bash
+# 目标程序路径（需要运行的可执行文件或命令）
+TARGET_PROCESS="/usr/libexec/gxde-daemon/daemon-manager/gxde-daemon-manager"
+# 若检测到 systemd 正在运行则退出
+DONT_RUN_IF_SYSTEMD_EXIST=""
+
+

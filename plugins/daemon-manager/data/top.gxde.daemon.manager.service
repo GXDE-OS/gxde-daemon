@@ -1,4 +1,0 @@
-[D-BUS Service]
-Name=top.gxde.daemon.manager
-Exec=/usr/libexec/gxde-daemon/daemon-manager/gxde-daemon-manager
-SystemdService=gxde-daemon-manager.service

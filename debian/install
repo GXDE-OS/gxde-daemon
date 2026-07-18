@@ -9,6 +9,7 @@ dbus/services usr/share/dbus-1
 dbus/system-services usr/share/dbus-1
 dbus/system.d etc/dbus-1
 k9/system/* usr/share/gxde-k9/system/
+k9/edging/* usr/share/gxde-k9/edging/
 k9/disable/* usr/share/gxde-daemon/daemon-k9-conf
 systemd/ etc/
 plugins/dock/data/top.gxde.dock.service usr/share/dbus-1/services
