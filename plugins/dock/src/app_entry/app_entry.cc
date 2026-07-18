@@ -17,6 +17,8 @@
  * along with gxde-daemon.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <cjson/cJSON.h>
+
 #include <memory>
 #include <string>
 #include <utility>
@@ -316,16 +318,30 @@ void AppEntry::UpdateMenu() {
   }
 }
 
+// The menu string is not consumed by the dock frontend itself: the frontend
+// forwards it verbatim to deepin-menu (com.deepin.menu) via DBusMenu.ShowMenu,
+// which parses it as JSON. So this has to be real JSON in deepin's schema --
+// a GVariant text dump would merely fail to parse at click time.
 std::string AppEntry::BuildMenuJson() const {
-  GVariantBuilder items;
-  g_variant_builder_init(&items, G_VARIANT_TYPE("aa{sv}"));
+  cJSON* root = cJSON_CreateObject();
+  cJSON* items = cJSON_AddArrayToObject(root, "items");
 
   auto add_item = [&items](const char* id, const char* name) {
-    GVariantBuilder item;
-    g_variant_builder_init(&item, G_VARIANT_TYPE("a{sv}"));
-    g_variant_builder_add(&item, "{sv}", "id", g_variant_new_string(id));
-    g_variant_builder_add(&item, "{sv}", "name", g_variant_new_string(name));
-    g_variant_builder_add_value(&items, g_variant_builder_end(&item));
+    cJSON* item = cJSON_CreateObject();
+    cJSON_AddStringToObject(item, "itemId", id);
+    cJSON_AddStringToObject(item, "itemText", name);
+    cJSON_AddStringToObject(item, "itemIcon", "");
+    cJSON_AddStringToObject(item, "itemIconHover", "");
+    cJSON_AddStringToObject(item, "itemIconInactive", "");
+    cJSON_AddBoolToObject(item, "isActive", true);
+    cJSON_AddBoolToObject(item, "isCheckable", false);
+    cJSON_AddBoolToObject(item, "checked", false);
+    // deepin-menu expects itemSubMenu to be present even when there is no
+    // submenu; a null here makes it bail out while parsing the item.
+    cJSON* sub = cJSON_CreateObject();
+    cJSON_AddItemToObject(sub, "items", cJSON_CreateArray());
+    cJSON_AddItemToObject(item, "itemSubMenu", sub);
+    cJSON_AddItemToArray(items, item);
   };
 
   add_item("launch", has_window() ? "Open" : "Launch");
@@ -351,11 +367,10 @@ std::string AppEntry::BuildMenuJson() const {
   }
   add_item(is_docked_ ? "undock" : "dock", is_docked_ ? "Undock" : "Dock");
 
-  GVariant* array = g_variant_builder_end(&items);
-  gchar* json = g_variant_print(array, TRUE);
-  std::string result = json != nullptr ? json : "[]";
-  g_free(json);
-  g_variant_unref(g_variant_ref_sink(array));
+  char* json = cJSON_PrintUnformatted(root);
+  std::string result = json != nullptr ? json : R"({"items":[]})";
+  cJSON_free(json);
+  cJSON_Delete(root);
   return result;
 }
 

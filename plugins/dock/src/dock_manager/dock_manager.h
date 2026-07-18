@@ -60,6 +60,10 @@ class DockManager : public WindowObserver {
 
   void EmitEntryAdded(const std::string& object_path, int32_t index);
   void EmitEntryRemoved(const std::string& entry_id);
+  // The Entries property mirrors the entry object paths; deepin frontends read
+  // it to enumerate entries up front rather than replaying EntryAdded.
+  GVariant* BuildEntriesVariant() const;
+  void EmitEntriesChanged();
   void EmitServiceStarted();
   void EmitServiceStopped();
 

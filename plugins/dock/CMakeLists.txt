@@ -27,6 +27,7 @@ pkg_check_modules(DEPS REQUIRED
   gio-unix-2.0
   gobject-2.0
   gdk-pixbuf-2.0
+  libcjson
   wayland-client
   kywc
   xcb

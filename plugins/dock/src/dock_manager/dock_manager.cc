@@ -46,6 +46,7 @@ const char kManagerIntrospection[] = R"XML(<node>
     <property name='HideTimeout' type='u' access='readwrite'/>
     <property name='WindowSplit' type='b' access='readwrite'/>
     <property name='DockedApps' type='as' access='read'/>
+    <property name='Entries' type='ao' access='read'/>
     <property name='Opacity' type='d' access='read'/>
     <property name='HideState' type='i' access='read'/>
     <property name='FrontendWindowRect' type='(iiuu)' access='read'/>
@@ -508,17 +509,32 @@ void DockManager::SaveDockedApps() {
   settings_.set_docked_apps(list);
 }
 
+GVariant* DockManager::BuildEntriesVariant() const {
+  GVariantBuilder builder;
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("ao"));
+  for (AppEntry* entry : entries_.items()) {
+    g_variant_builder_add(&builder, "o", entry->object_path().c_str());
+  }
+  return g_variant_builder_end(&builder);
+}
+
+void DockManager::EmitEntriesChanged() {
+  EmitManagerPropertyChanged("Entries", BuildEntriesVariant());
+}
+
 void DockManager::EmitEntryAdded(const std::string& object_path,
                                  int32_t index) {
   g_dbus_connection_emit_signal(
       connection_, nullptr, kManagerPath, kManagerInterface, "EntryAdded",
       g_variant_new("(oi)", object_path.c_str(), index), nullptr);
+  EmitEntriesChanged();
 }
 
 void DockManager::EmitEntryRemoved(const std::string& entry_id) {
   g_dbus_connection_emit_signal(
       connection_, nullptr, kManagerPath, kManagerInterface, "EntryRemoved",
       g_variant_new("(s)", entry_id.c_str()), nullptr);
+  EmitEntriesChanged();
 }
 
 void DockManager::EmitServiceStarted() {
@@ -584,6 +600,7 @@ GVariant* DockManager::OnGetProperty(GDBusConnection* /*connection*/,
     }
     return g_variant_builder_end(&builder);
   }
+  if (prop == "Entries") return self->BuildEntriesVariant();
   return nullptr;
 }
 
