@@ -1,6 +1,5 @@
 bin usr
 misc/polkit-1 usr/share
-misc/wayland-sessions usr/share
 misc/applications usr/share
 libexec/gxde-daemon usr/libexec
 gxde-daemon usr/libexec
@@ -12,5 +11,4 @@ k9/edging/* usr/share/gxde-k9/edging/
 k9/disable/* usr/share/gxde-daemon/daemon-k9-conf
 systemd/ etc/
 plugins/dock/data/top.gxde.daemon.dock.service usr/share/dbus-1/services
-plugins/daemon-manager/data/top.gxde.daemon.manager.service usr/share/dbus-1/services
 manifests/*.json usr/share/gxde-daemon/plugins

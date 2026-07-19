@@ -33,3 +33,4 @@ build*/
 *.pyc
 debian/gxde-daemon.postrm.debhelper
 debian/gxde-daemon.postinst.debhelper
+.lock
