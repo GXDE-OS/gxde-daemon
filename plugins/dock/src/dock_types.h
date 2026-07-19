@@ -58,11 +58,11 @@ struct Rect {
   uint32_t height = 0;
 };
 
-inline constexpr char kBusName[] = "top.gxde.dock";
-inline constexpr char kManagerPath[] = "/top/gxde/dock";
-inline constexpr char kManagerInterface[] = "top.gxde.dock";
-inline constexpr char kEntryPathPrefix[] = "/top/gxde/dock/entries/";
-inline constexpr char kEntryInterface[] = "top.gxde.dock.Entry";
+inline constexpr char kBusName[] = "top.gxde.daemon.dock";
+inline constexpr char kManagerPath[] = "/top/gxde/daemon/dock";
+inline constexpr char kManagerInterface[] = "top.gxde.daemon.dock";
+inline constexpr char kEntryPathPrefix[] = "/top/gxde/daemon/dock/entries/";
+inline constexpr char kEntryInterface[] = "top.gxde.daemon.dock.Entry";
 
 }  // namespace dock
 }  // namespace gxde

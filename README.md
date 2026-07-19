@@ -159,4 +159,4 @@ misc/plugins/audio-control.json     usr/share/gxde-daemon/plugins/
 | system-update     | `top.gxde.system.update`     | `com.gxde.daemon.system.update`           | Session |
 | power             | `top.gxde.power`             | `com.gxde.daemon.power`                   | System  |
 | fake-license      | `com.deepin.license`         | —                                         | System  |
-| dock              | `top.gxde.dock`              | —   | Session |
+| dock              | `top.gxde.daemon.dock`              | —   | Session |

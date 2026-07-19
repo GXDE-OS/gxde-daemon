@@ -37,7 +37,7 @@ namespace dock {
 namespace {
 
 const char kManagerIntrospection[] = R"XML(<node>
-  <interface name='top.gxde.dock'>
+  <interface name='top.gxde.daemon.dock'>
     <property name='HideMode' type='i' access='readwrite'/>
     <property name='DisplayMode' type='i' access='readwrite'/>
     <property name='Position' type='i' access='readwrite'/>

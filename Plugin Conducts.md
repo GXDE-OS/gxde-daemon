@@ -99,7 +99,7 @@
 | 16   | `com.deepin.daemon.SystemInfo`       | `sysinfo`         | `top.gxde.sysinfo`        | 磁盘 / 内存 / 系统信息                 |
 | 17   | `com.deepin.LastoreSessionHelper`    | `lastore`         | `top.gxde.lastore`        | 应用商店会话助手                       |
 | 18   | `com.deepin.daemon.Network`          | `network`         | `top.gxde.network`        | 网络管理（会话侧）                     |
-| 19   | `com.deepin.dde.daemon.Dock`         | `dock`            | `top.gxde.dock`           | Dock 任务栏                            |
+| 19   | `com.deepin.dde.daemon.Dock`         | `dock`            | `top.gxde.daemon.dock`           | Dock 任务栏                            |
 | 20   | `com.deepin.dde.TrayManager`         | `trayicon`        | `top.gxde.trayicon`       | 系统托盘管理                           |
 | 21   | `com.deepin.api.XEventMonitor`       | `x-event-monitor` | `top.gxde.xeventmonitor`  | X11 事件监控                           |
 | 22   | `com.deepin.daemon.Grub2`            | `grub-gfx`        | `top.gxde.grubgfx`        | GRUB 主题                              |

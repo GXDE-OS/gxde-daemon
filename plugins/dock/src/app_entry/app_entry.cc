@@ -34,7 +34,7 @@ namespace dock {
 namespace {
 
 const char kEntryIntrospection[] = R"XML(<node>
-  <interface name='top.gxde.dock.Entry'>
+  <interface name='top.gxde.daemon.dock.Entry'>
     <property name='Id' type='s' access='read'/>
     <property name='IsActive' type='b' access='read'/>
     <property name='Name' type='s' access='read'/>
