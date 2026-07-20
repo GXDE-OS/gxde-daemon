@@ -4,5 +4,5 @@
     "version": "0.1-unstable",
     "exec": "/usr/libexec/gxde-daemon/gtk-theme-inject/gxde-gtk-theme-inject",
     "maintainer": "CharOfString <root@charofstring.cc>",
-    "oneshot": true
+    "restart": true
 }
