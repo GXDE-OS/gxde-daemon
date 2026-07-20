@@ -17,8 +17,8 @@
  * along with gxde-daemon.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef SRC_MANIFEST_MANIFEST_H_
-#define SRC_MANIFEST_MANIFEST_H_
+#ifndef PLUGINS_DAEMON_MANAGER_SRC_MANIFEST_MANIFEST_H_
+#define PLUGINS_DAEMON_MANAGER_SRC_MANIFEST_MANIFEST_H_
 
 #include <optional>
 #include <string>
@@ -36,6 +36,7 @@ struct Manifest {
   std::vector<std::string> bus_names;
   bool restart = true;
   bool resident = false;
+  bool oneshot = false;
   std::string path;
 
   // Whether the manager should launch and watch this plugin. Derived, not a
@@ -50,4 +51,4 @@ std::vector<Manifest> LoadManifests(const std::string& dir);
 }  // namespace dmgr
 }  // namespace gxde
 
-#endif  // SRC_MANIFEST_MANIFEST_H_
+#endif  // PLUGINS_DAEMON_MANAGER_SRC_MANIFEST_MANIFEST_H_

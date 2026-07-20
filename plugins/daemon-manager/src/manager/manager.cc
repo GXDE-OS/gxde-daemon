@@ -130,6 +130,16 @@ void Manager::Rescan() {
       StartSupervised(manifest);
     }
   }
+
+  // Oneshot plugins: Just fire-and-forget.
+  for (const auto& [name, manifest] : plugins_) {
+    if (manifest.oneshot &&
+        oneshot_launched_.find(name) == oneshot_launched_.end() &&
+        !manifest.exec.empty()) {
+      StartOneshot(manifest);
+      oneshot_launched_.insert(name);
+    }
+  }
 }
 
 void Manager::StartSupervised(const Manifest& manifest) {
@@ -175,6 +185,35 @@ void Manager::StartSupervised(const Manifest& manifest) {
   sup.child_watch = g_child_watch_add(pid, &Manager::OnChildExit, ctx);
   g_message("(Daemon MGR) Plugin: Started %s (pid %d)", manifest.name.c_str(),
     pid);
+}
+
+void Manager::StartOneshot(const Manifest& manifest) {
+  gint argc = 0;
+  gchar** argv = nullptr;
+  GError* error = nullptr;
+
+  if (!g_shell_parse_argv(manifest.exec.c_str(), &argc, &argv, &error)) {
+    g_warning("(Daemon MGR) Plugin: Bad exec for oneshot %s. %s",
+      manifest.name.c_str(), error->message);
+    g_clear_error(&error);
+    return;
+  }
+
+  gboolean ok = g_spawn_async(nullptr, argv, nullptr,
+    static_cast<GSpawnFlags>(G_SPAWN_DO_NOT_REAP_CHILD | G_SPAWN_SEARCH_PATH),
+    nullptr, nullptr, nullptr, &error);
+
+  g_strfreev(argv);
+
+  if (!ok) {
+    g_warning("(Daemon MGR) Plugin: Failed to spawn oneshot %s. %s",
+      manifest.name.c_str(), error->message);
+    g_clear_error(&error);
+    return;
+  }
+
+  g_message("(Daemon MGR) Plugin: Oneshot %s launched."
+    "Note that we won't manage it.", manifest.name.c_str());
 }
 
 // static
@@ -297,6 +336,8 @@ GVariant* Manager::BuildPluginInfo(const Manifest& manifest) const {
     g_variant_new_boolean(manifest.NeedsSupervision()));
   g_variant_builder_add(&builder, "{sv}", "resident",
     g_variant_new_boolean(manifest.resident));
+  g_variant_builder_add(&builder, "{sv}", "oneshot",
+    g_variant_new_boolean(manifest.oneshot));
 
   GVariantBuilder bus_builder;
   g_variant_builder_init(&bus_builder, G_VARIANT_TYPE("as"));

@@ -8,6 +8,7 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 DOCK_SRC = plugins/dock
 DM_SRC = plugins/daemon-manager
+GTK_INJECT_SRC = plugins/gtk-theme-inject
 PKGDIR = debian/gxde-daemon
 
 %:
@@ -22,12 +23,16 @@ override_dh_auto_build:
 	cmake --build $(DOCK_SRC)/build -j$$(nproc)
 	cmake -S $(DM_SRC) -B $(DM_SRC)/build -DCMAKE_BUILD_TYPE=Release
 	cmake --build $(DM_SRC)/build -j$$(nproc)
+	cmake -S $(GTK_INJECT_SRC) -B $(GTK_INJECT_SRC)/build -DCMAKE_BUILD_TYPE=Release
+	cmake --build $(GTK_INJECT_SRC)/build -j$$(nproc)
 
 override_dh_auto_install:
 	install -Dm755 $(DOCK_SRC)/build/gxde-dock-daemon \
 		$(PKGDIR)/usr/libexec/gxde-daemon/dock/gxde-dock-daemon
+	install -Dm755 $(GTK_INJECT_SRC)/build/gxde-gtk-theme-inject \
+		$(PKGDIR)/usr/libexec/gxde-daemon/gtk-theme-inject/gxde-gtk-theme-inject
 	install -Dm755 $(DM_SRC)/build/gxde-daemon-manager \
 		$(PKGDIR)/usr/libexec/gxde-daemon/daemon-manager/gxde-daemon-manager
 
 override_dh_auto_clean:
-	rm -rf $(DOCK_SRC)/build $(DM_SRC)/build
+	rm -rf $(DOCK_SRC)/build $(DM_SRC)/build $(GTK_INJECT_SRC)/build

@@ -65,6 +65,7 @@ std::optional<Manifest> LoadManifest(const std::string& file_path) {
   manifest.maintainer = GetString(root, "maintainer");
   manifest.restart = GetBool(root, "restart", true);
   manifest.resident = GetBool(root, "resident", false);
+  manifest.oneshot = GetBool(root, "oneshot", false);
   manifest.path = file_path;
 
   const cJSON* bus = cJSON_GetObjectItemCaseSensitive(root, "bus_names");
