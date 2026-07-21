@@ -17,12 +17,13 @@
  * along with gxde-daemon.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef SRC_MANAGER_MANAGER_H_
-#define SRC_MANAGER_MANAGER_H_
+#ifndef PLUGINS_DAEMON_MANAGER_SRC_MANAGER_MANAGER_H_
+#define PLUGINS_DAEMON_MANAGER_SRC_MANAGER_MANAGER_H_
 
 #include <gio/gio.h>
 
 #include <map>
+#include <set>
 #include <string>
 
 #include "src/manifest/manifest.h"
@@ -58,6 +59,7 @@ class Manager {
 
   void Rescan();
   void StartSupervised(const Manifest& manifest);
+  void StartOneshot(const Manifest& manifest);
   static void OnChildExit(GPid pid, gint status, gpointer user_data);
   static gboolean OnRestartTimeout(gpointer user_data);
   bool IsNameOwned(const std::string& bus_name) const;
@@ -72,9 +74,10 @@ class Manager {
   guint registration_id_ = 0;
   std::map<std::string, Manifest> plugins_;
   std::map<std::string, Supervised> supervised_;
+  std::set<std::string> oneshot_launched_;
 };
 
 }  // namespace dmgr
 }  // namespace gxde
 
-#endif  // SRC_MANAGER_MANAGER_H_
+#endif  // PLUGINS_DAEMON_MANAGER_SRC_MANAGER_MANAGER_H_
