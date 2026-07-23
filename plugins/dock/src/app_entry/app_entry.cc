@@ -514,13 +514,31 @@ void AppEntry::Activate(uint32_t /*timestamp*/) {
     LaunchApp({});
     return;
   }
-  uint32_t win =
-      current_window_ != 0 ? current_window_ : windows_.begin()->first;
   WindowBackend* backend = manager_->backend();
-  if (manager_->active_window() == win) {
-    backend->Minimize(win);
+  uint32_t active = manager_->active_window();
+  uint32_t current =
+      current_window_ != 0 ? current_window_ : windows_.begin()->first;
+
+  if (windows_.size() == 1) {
+    // 单窗口：点击切换显示/隐藏
+    if (active == current) {
+      backend->Minimize(current);
+    } else {
+      backend->Activate(current);
+    }
+    return;
+  }
+
+  // 多窗口：在窗口间循环切换，而不是最小化
+  if (windows_.count(active) != 0) {
+    auto it = windows_.find(active);
+    ++it;
+    if (it == windows_.end()) {
+      it = windows_.begin();
+    }
+    backend->Activate(it->first);
   } else {
-    backend->Activate(win);
+    backend->Activate(current);
   }
 }
 
