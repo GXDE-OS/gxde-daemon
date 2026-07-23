@@ -1,3 +1,11 @@
+gxde-daemon (1.3.1-gxde4) UNRELEASED; urgency=medium
+
+  * 新增 Wayland 主题注入
+  * 调整 Wayland 主题监听
+  * 修复点击 Dock 图标多窗口时被最小化而非切换的问题
+
+ -- CharOfString <root@charofstring.cc>  Thu, 23 Jul 2026 18:30:00 +0800
+
 gxde-daemon (1.3.1-gxde3) UNRELEASED; urgency=medium
 
   [CharOfString]
