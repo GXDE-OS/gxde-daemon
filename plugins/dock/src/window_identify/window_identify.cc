@@ -21,9 +21,11 @@
 
 #include <gio/gio.h>
 
+#include <algorithm>
 #include <array>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace gxde {
 namespace dock {
@@ -112,21 +114,60 @@ std::string ExeBaseName(uint32_t pid) {
   return result;
 }
 
+// /proc/<pid>/cmdline[0] is the path used to start the process, which usually
+// matches the Exec key of a .desktop file.  /proc/<pid>/exe may point to a
+// different binary (e.g. firefox script exec's firefox-bin), so we need both.
+std::string CmdlineBaseName(uint32_t pid) {
+  if (pid == 0) {
+    return "";
+  }
+  gchar* path = g_strdup_printf("/proc/%u/cmdline", pid);
+  gchar* contents = nullptr;
+  gsize length = 0;
+  std::string result;
+  if (g_file_get_contents(path, &contents, &length, nullptr) && length > 0) {
+    gsize end = 0;
+    while (end < length && contents[end] != '\0') ++end;
+    gchar* base = g_path_get_basename(std::string(contents, end).c_str());
+    result = base != nullptr ? base : "";
+    g_free(base);
+  }
+  g_free(contents);
+  g_free(path);
+  return result;
+}
+
 std::shared_ptr<AppInfo> MatchByExe(uint32_t pid) {
-  std::string exe = ExeBaseName(pid);
-  if (exe.empty()) {
+  // Collect candidate binary names from both /proc/pid/exe and
+  // /proc/pid/cmdline[0].  cmdline[0] matches the Exec key more reliably
+  // when a wrapper script exec's into a differently-named binary.
+  std::vector<std::string> wants;
+  for (const std::string& name : {CmdlineBaseName(pid), ExeBaseName(pid)}) {
+    if (!name.empty()) {
+      std::string lowered = Lower(name);
+      if (std::find(wants.begin(), wants.end(), lowered) == wants.end()) {
+        wants.push_back(lowered);
+      }
+    }
+  }
+  if (wants.empty()) {
     return nullptr;
   }
-  std::string want = Lower(exe);
   std::shared_ptr<AppInfo> result;
   GList* all = g_app_info_get_all();
   for (GList* l = all; l != nullptr && result == nullptr; l = l->next) {
     auto* info = static_cast<GAppInfo*>(l->data);
+    if (!G_IS_DESKTOP_APP_INFO(info)) {
+      continue;
+    }
     const char* exec = g_app_info_get_executable(info);
-    if (exec != nullptr) {
-      gchar* base = g_path_get_basename(exec);
-      if (base != nullptr && Lower(base) == want &&
-          G_IS_DESKTOP_APP_INFO(info)) {
+    if (exec == nullptr) {
+      continue;
+    }
+    gchar* base = g_path_get_basename(exec);
+    if (base != nullptr) {
+      std::string lowered = Lower(base);
+      if (std::find(wants.begin(), wants.end(), lowered) != wants.end()) {
         const char* file =
             g_desktop_app_info_get_filename(G_DESKTOP_APP_INFO(info));
         if (file != nullptr) {
