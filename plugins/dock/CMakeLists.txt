@@ -53,3 +53,6 @@ target_link_directories(gxde-dock-daemon PRIVATE ${DEPS_LIBRARY_DIRS})
 
 install(TARGETS gxde-dock-daemon
   RUNTIME DESTINATION libexec/gxde-daemon/dock)
+
+install(FILES data/window_patterns.json
+  DESTINATION share/gxde/data)

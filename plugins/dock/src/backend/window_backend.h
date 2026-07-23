@@ -35,6 +35,9 @@ struct BackendWindow {
   std::string wm_class;
   std::string title;
   std::string icon;
+  std::string gtk_app_id;      // _GTK_APPLICATION_ID
+  std::string flatpak_app_id;  // FLATPAK_APPID
+  std::string wm_role;         // WM_WINDOW_ROLE
   uint32_t pid = 0;
   bool minimized = false;
   bool maximized = false;

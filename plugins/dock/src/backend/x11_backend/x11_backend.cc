@@ -46,12 +46,38 @@ xcb_atom_t InternAtom(xcb_connection_t* conn, const char* name) {
 }
 
 xcb_atom_t g_wm_change_state = XCB_ATOM_NONE;
+xcb_atom_t g_gtk_application_id = XCB_ATOM_NONE;
+xcb_atom_t g_flatpak_appid = XCB_ATOM_NONE;
+xcb_atom_t g_wm_window_role = XCB_ATOM_NONE;
 
 std::string ToLower(std::string s) {
   for (char& c : s) {
     c = static_cast<char>(g_ascii_tolower(c));
   }
   return s;
+}
+
+std::string ReadStringProperty(xcb_connection_t* conn, xcb_window_t win,
+                               xcb_atom_t atom) {
+  if (atom == XCB_ATOM_NONE) {
+    return "";
+  }
+  xcb_get_property_cookie_t cookie =
+      xcb_get_property(conn, 0, win, atom, XCB_ATOM_ANY, 0, 1024);
+  xcb_get_property_reply_t* reply =
+      xcb_get_property_reply(conn, cookie, nullptr);
+  if (reply == nullptr || reply->type == XCB_ATOM_NONE) {
+    free(reply);
+    return "";
+  }
+  std::string result;
+  const char* data = static_cast<const char*>(xcb_get_property_value(reply));
+  int length = xcb_get_property_value_length(reply);
+  if (data != nullptr && length > 0) {
+    result.assign(data, length);
+  }
+  free(reply);
+  return result;
 }
 
 }  // namespace
@@ -81,6 +107,9 @@ bool X11Backend::Init(WindowObserver* observer) {
     return false;
   }
   g_wm_change_state = InternAtom(conn_, "WM_CHANGE_STATE");
+  g_gtk_application_id = InternAtom(conn_, "_GTK_APPLICATION_ID");
+  g_flatpak_appid = InternAtom(conn_, "FLATPAK_APPID");
+  g_wm_window_role = InternAtom(conn_, "WM_WINDOW_ROLE");
 
   const xcb_setup_t* setup = xcb_get_setup(conn_);
   xcb_screen_iterator_t it = xcb_setup_roots_iterator(setup);
@@ -219,6 +248,10 @@ bool X11Backend::ReadWindow(xcb_window_t win, BackendWindow* out) {
   if (xcb_ewmh_get_wm_pid_reply(&ewmh_, pid_cookie, &pid, nullptr) != 0) {
     out->pid = pid;
   }
+
+  out->gtk_app_id = ReadStringProperty(conn_, win, g_gtk_application_id);
+  out->flatpak_app_id = ReadStringProperty(conn_, win, g_flatpak_appid);
+  out->wm_role = ReadStringProperty(conn_, win, g_wm_window_role);
 
   out->minimized = false;
   out->maximized = false;
