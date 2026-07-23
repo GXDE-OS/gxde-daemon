@@ -61,6 +61,7 @@ class WaylandBackend : public WindowBackend {
     uint32_t id = 0;
     kywc_toplevel* toplevel = nullptr;
     bool reported = false;
+    std::string last_app_id;
   };
 
   struct CaptureRequest {

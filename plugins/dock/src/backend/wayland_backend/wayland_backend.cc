@@ -136,6 +136,14 @@ BackendWindow WaylandBackend::ToBackendWindow(const Tracked& tracked) const {
   w.title = t->title != nullptr ? t->title : "";
   w.icon = t->icon != nullptr ? t->icon : "";
   w.pid = t->pid;
+  // On Wayland, app_id is the only identifier the compositor provides.
+  // Populate wm_class/wm_instance so the identification chain (Rule engine,
+  // TryDesktopId, etc.) can use them, mirroring how the X11 backend sets
+  // app_id = ToLower(wm_class).
+  if (!w.app_id.empty()) {
+    w.wm_instance = w.app_id;
+    w.wm_class = w.app_id;
+  }
   w.minimized = t->minimized;
   w.maximized = t->maximized;
   w.active = t->activated;
@@ -194,11 +202,37 @@ void WaylandBackend::HandleToplevelState(kywc_toplevel* toplevel,
   BackendWindow window = ToBackendWindow(tracked);
 
   if (!tracked.reported) {
-    if (skip || window.app_id.empty()) {
+    if (skip) {
       return;
     }
+    // Report even with empty app_id — the identification chain (PidEnv,
+    // MatchByExe, etc.) can identify the window via PID.  This is essential
+    // for XWayland windows where the compositor may not set app_id.
     tracked.reported = true;
+    tracked.last_app_id = window.app_id;
     if (observer_ != nullptr) {
+      observer_->OnWindowAdded(window);
+    }
+    return;
+  }
+
+  // If skip_taskbar changed to true after being reported, remove the window.
+  if (skip) {
+    if (observer_ != nullptr) {
+      observer_->OnWindowRemoved(window.id);
+    }
+    tracked.reported = false;
+    tracked.last_app_id.clear();
+    return;
+  }
+
+  // If app_id changed (e.g. compositor set it late for an XWayland window),
+  // remove and re-add so the dock re-identifies the window and can merge it
+  // with the correct docked icon.
+  if (window.app_id != tracked.last_app_id) {
+    tracked.last_app_id = window.app_id;
+    if (observer_ != nullptr) {
+      observer_->OnWindowRemoved(window.id);
       observer_->OnWindowAdded(window);
     }
     return;
