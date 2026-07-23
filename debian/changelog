@@ -1,5 +1,6 @@
-gxde-daemon (1.3.1-gxde7) UNRELEASED; urgency=medium
+gxde-daemon (1.3.1-gxde8) UNRELEASED; urgency=medium
 
+  [ CharOfString ]
   * 新增 Wayland 主题注入
   * 调整 Wayland 主题监听
   * 修复点击 Dock 图标多窗口时被最小化而非切换的问题
@@ -11,7 +12,10 @@ gxde-daemon (1.3.1-gxde7) UNRELEASED; urgency=medium
   * 修复 Wayland 下 XWayland 应用窗口不显示的问题（移除 app_id 空值过滤）
   * Wayland 后端 app_id 变更时自动重新识别窗口
 
- -- CharOfString <root@charofstring.cc>  Thu, 23 Jul 2026 20:30:00 +0800
+  [ gfdgd_xi ]
+  * 新增依赖 playerctl
+
+ -- gfdgd_xi <3025613752@qq.com>  Thu, 23 Jul 2026 21:24:31 +0800
 
 gxde-daemon (1.3.1-gxde6) UNRELEASED; urgency=medium
 
