@@ -1,4 +1,11 @@
-gxde-daemon (1.3.1-gxde8) UNRELEASED; urgency=medium
+gxde-daemon (1.3.1-gxde9) UNRELEASED; urgency=medium
+
+  [ CharOfString ]
+  * fix(dock): 修复 WindowInfos 属性 DBus 类型与前端不匹配的问题
+
+ -- CharOfString <root@charofstring.cc>  Fri, 25 Jul 2026 21:30:00 +0800
+
+gxde-daemon (1.3.1-gxde8) unstable; urgency=medium
 
   [ CharOfString ]
   * 新增 Wayland 主题注入

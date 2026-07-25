@@ -42,7 +42,7 @@ const char kEntryIntrospection[] = R"XML(<node>
     <property name='DesktopFile' type='s' access='read'/>
     <property name='CurrentWindow' type='u' access='read'/>
     <property name='IsDocked' type='b' access='read'/>
-    <property name='WindowInfos' type='a{u(sb)}' access='read'/>
+    <property name='WindowInfos' type='a{u(bs)}' access='read'/>
     <property name='Menu' type='s' access='read'/>
     <method name='Activate'>
       <arg name='timestamp' type='u' direction='in'/>
@@ -294,10 +294,10 @@ void AppEntry::UpdateDesktopFile() {
 
 void AppEntry::UpdateWindowInfos() {
   GVariantBuilder builder;
-  g_variant_builder_init(&builder, G_VARIANT_TYPE("a{u(sb)}"));
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("a{u(bs)}"));
   for (const auto& [id, window] : windows_) {
-    g_variant_builder_add(&builder, "{u(sb)}", id, window.title.c_str(),
-                          static_cast<gboolean>(FALSE));
+    g_variant_builder_add(&builder, "{u(bs)}", id,
+                          static_cast<gboolean>(FALSE), window.title.c_str());
   }
   EmitChanged("WindowInfos", g_variant_builder_end(&builder));
 }
@@ -427,10 +427,10 @@ GVariant* AppEntry::OnGetProperty(GDBusConnection* /*connection*/,
   }
   if (prop == "WindowInfos") {
     GVariantBuilder builder;
-    g_variant_builder_init(&builder, G_VARIANT_TYPE("a{u(sb)}"));
+    g_variant_builder_init(&builder, G_VARIANT_TYPE("a{u(bs)}"));
     for (const auto& [id, window] : self->windows_) {
-      g_variant_builder_add(&builder, "{u(sb)}", id, window.title.c_str(),
-                            static_cast<gboolean>(FALSE));
+      g_variant_builder_add(&builder, "{u(bs)}", id,
+                            static_cast<gboolean>(FALSE), window.title.c_str());
     }
     return g_variant_builder_end(&builder);
   }
