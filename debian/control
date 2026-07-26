@@ -35,6 +35,7 @@ Depends:
  brightnessctl,
  gxde-wlcom,
  grim,
+ playerctl,
 # python3-pocketsphinx,
 # python3-speech-recognition,
 # python3-pyaudio,
