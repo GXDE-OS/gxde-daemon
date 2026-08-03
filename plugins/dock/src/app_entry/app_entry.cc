@@ -360,12 +360,13 @@ std::string AppEntry::BuildMenuJson() const {
     }
   }
 
+  add_item(is_docked_ ? "undock" : "dock", is_docked_ ? "Undock" : "Dock");
+
   if (has_window()) {
     add_item("all-windows", "All Windows");
     add_item("force-quit", "Force Quit");
     add_item("close-all", "Close All");
   }
-  add_item(is_docked_ ? "undock" : "dock", is_docked_ ? "Undock" : "Dock");
 
   char* json = cJSON_PrintUnformatted(root);
   std::string result = json != nullptr ? json : R"({"items":[]})";
