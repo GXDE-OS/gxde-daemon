@@ -27,6 +27,7 @@
 #include "src/app_entry/app_entry.h"
 #include "src/dock_manager/dock_manager.h"
 #include "src/dock_types.h"
+#include "src/i18n/i18n.h"
 
 namespace gxde {
 namespace dock {
@@ -344,7 +345,7 @@ std::string AppEntry::BuildMenuJson() const {
     cJSON_AddItemToArray(items, item);
   };
 
-  add_item("launch", has_window() ? "Open" : "Launch");
+  add_item("launch", has_window() ? _("Open") : _("Launch"));
   if (app_info_ != nullptr) {
     GDesktopAppInfo* info =
         g_desktop_app_info_new_from_filename(app_info_->file_name().c_str());
@@ -360,12 +361,12 @@ std::string AppEntry::BuildMenuJson() const {
     }
   }
 
-  add_item(is_docked_ ? "undock" : "dock", is_docked_ ? "Undock" : "Dock");
+  add_item(is_docked_ ? "undock" : "dock", is_docked_ ? _("Undock") : _("Dock"));
 
   if (has_window()) {
-    add_item("all-windows", "All Windows");
-    add_item("force-quit", "Force Quit");
-    add_item("close-all", "Close All");
+    add_item("all-windows", _("All Windows"));
+    add_item("force-quit", _("Force Quit"));
+    add_item("close-all", _("Close All"));
   }
 
   char* json = cJSON_PrintUnformatted(root);

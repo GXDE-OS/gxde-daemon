@@ -44,12 +44,21 @@ add_executable(gxde-dock-daemon
   src/dock_manager/dock_manager.cc
   src/backend/backend_factory.cc
   src/backend/wayland_backend/wayland_backend.cc
-  src/backend/x11_backend/x11_backend.cc)
+  src/backend/x11_backend/x11_backend.cc
+  src/i18n/i18n.cc)
 
 target_include_directories(gxde-dock-daemon PRIVATE ${DEPS_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_options(gxde-dock-daemon PRIVATE ${DEPS_CFLAGS_OTHER})
 target_link_libraries(gxde-dock-daemon PRIVATE ${DEPS_LIBRARIES})
 target_link_directories(gxde-dock-daemon PRIVATE ${DEPS_LIBRARY_DIRS})
 
+# Install path for translation files.
+target_compile_definitions(gxde-dock-daemon PRIVATE
+  TRANSLATIONS_DIR="${CMAKE_INSTALL_PREFIX}/share/gxde-daemon/dock/translations")
+
 install(TARGETS gxde-dock-daemon
   RUNTIME DESTINATION libexec/gxde-daemon/dock)
+
+install(DIRECTORY translations/
+  DESTINATION share/gxde-daemon/dock/translations
+  FILES_MATCHING PATTERN "*.json")

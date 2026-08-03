@@ -24,6 +24,7 @@
 
 #include "src/dock_manager/dock_manager.h"
 #include "src/dock_types.h"
+#include "src/i18n/i18n.h"
 
 namespace {
 
@@ -59,6 +60,9 @@ void OnNameLost(GDBusConnection* /*connection*/, const gchar* name,
 }  // namespace
 
 int main(int /*argc*/, char** /*argv*/) {
+  // Initialize i18n before building any UI strings.
+  gxde::dock::i18n::init(TRANSLATIONS_DIR);
+
   g_loop = g_main_loop_new(nullptr, FALSE);
 
   g_unix_signal_add(SIGTERM, &OnTerminate, nullptr);
