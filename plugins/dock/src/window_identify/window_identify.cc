@@ -138,24 +138,36 @@ std::string CmdlineBaseName(uint32_t pid) {
 }
 
 std::shared_ptr<AppInfo> MatchByExe(uint32_t pid) {
-  // Collect candidate binary names from both /proc/pid/exe and
-  // /proc/pid/cmdline[0].  cmdline[0] matches the Exec key more reliably
-  // when a wrapper script exec's into a differently-named binary.
-  std::vector<std::string> wants;
-  for (const std::string& name : {CmdlineBaseName(pid), ExeBaseName(pid)}) {
-    if (!name.empty()) {
-      std::string lowered = Lower(name);
-      if (std::find(wants.begin(), wants.end(), lowered) == wants.end()) {
-        wants.push_back(lowered);
-      }
-    }
+  // Collect candidate binary names from both /proc/pid/cmdline[0] and
+  // /proc/pid/exe.  cmdline[0] matches the Exec key more reliably when a
+  // wrapper script exec's into a differently-named binary, so a desktop
+  // file matching cmdline[0] is preferred over one matching only the exe.
+  std::vector<std::string> cmdline_wants;
+  std::string cmdline_base = Lower(CmdlineBaseName(pid));
+  if (!cmdline_base.empty()) {
+    cmdline_wants.push_back(cmdline_base);
   }
-  if (wants.empty()) {
+  std::vector<std::string> exe_wants;
+  std::string exe_base = Lower(ExeBaseName(pid));
+  if (!exe_base.empty() && exe_base != cmdline_base) {
+    exe_wants.push_back(exe_base);
+  }
+  if (cmdline_wants.empty() && exe_wants.empty()) {
     return nullptr;
   }
-  std::shared_ptr<AppInfo> result;
+  auto in = [](const std::vector<std::string>& v, const std::string& s) {
+    return std::find(v.begin(), v.end(), s) != v.end();
+  };
+
+  // Several desktop files may share the same Exec basename (e.g. the
+  // installed firefox-spark.desktop and an auto-generated, hidden
+  // userapp-Firefox-*.desktop).  Prefer the canonical entry: visible
+  // (not NoDisplay), installed under a system applications directory, and
+  // matching the command the process was actually launched with.
+  std::shared_ptr<AppInfo> best;
+  int best_score = -1;
   GList* all = g_app_info_get_all();
-  for (GList* l = all; l != nullptr && result == nullptr; l = l->next) {
+  for (GList* l = all; l != nullptr; l = l->next) {
     auto* info = static_cast<GAppInfo*>(l->data);
     if (!G_IS_DESKTOP_APP_INFO(info)) {
       continue;
@@ -165,20 +177,43 @@ std::shared_ptr<AppInfo> MatchByExe(uint32_t pid) {
       continue;
     }
     gchar* base = g_path_get_basename(exec);
-    if (base != nullptr) {
-      std::string lowered = Lower(base);
-      if (std::find(wants.begin(), wants.end(), lowered) != wants.end()) {
-        const char* file =
-            g_desktop_app_info_get_filename(G_DESKTOP_APP_INFO(info));
-        if (file != nullptr) {
-          result = AppInfo::FromFile(file);
-        }
+    if (base == nullptr) {
+      continue;
+    }
+    std::string lowered = Lower(base);
+    g_free(base);
+
+    bool from_cmdline = in(cmdline_wants, lowered);
+    bool from_exe = in(exe_wants, lowered);
+    if (!from_cmdline && !from_exe) {
+      continue;
+    }
+    const char* file =
+        g_desktop_app_info_get_filename(G_DESKTOP_APP_INFO(info));
+    if (file == nullptr) {
+      continue;
+    }
+
+    bool hidden = g_desktop_app_info_get_nodisplay(
+                      G_DESKTOP_APP_INFO(info)) != 0;
+    bool installed = false;
+    for (const char* dir :
+         {"/usr/share/applications/", "/usr/local/share/applications/"}) {
+      if (strncmp(file, dir, strlen(dir)) == 0) {
+        installed = true;
+        break;
       }
-      g_free(base);
+    }
+
+    int score = (from_cmdline ? 1 : 0) + (installed ? 2 : 0) +
+                (hidden ? 0 : 4);
+    if (score > best_score) {
+      best_score = score;
+      best = AppInfo::FromFile(file);
     }
   }
   g_list_free_full(all, g_object_unref);
-  return result;
+  return best;
 }
 
 }  // namespace
