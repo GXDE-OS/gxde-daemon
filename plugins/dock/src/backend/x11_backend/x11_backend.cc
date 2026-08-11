@@ -148,6 +148,21 @@ void X11Backend::DispatchEvents() {
           }
         }
       }
+    } else if (type == XCB_CONFIGURE_NOTIFY) {
+      auto* cn = reinterpret_cast<xcb_configure_notify_event_t*>(event);
+      // 仅处理真实客户端窗口
+      if (cn->window != root_) {
+        auto it = windows_.find(cn->window);
+        if (it != windows_.end()) {
+          BackendWindow w;
+          if (ReadWindow(cn->window, &w)) {
+            windows_[cn->window] = w;
+            if (observer_ != nullptr) {
+              observer_->OnWindowChanged(w);
+            }
+          }
+        }
+      }
     } else if (type == XCB_DESTROY_NOTIFY) {
       auto* dn = reinterpret_cast<xcb_destroy_notify_event_t*>(event);
       auto it = windows_.find(dn->window);
@@ -260,7 +275,45 @@ bool X11Backend::ReadWindow(xcb_window_t win, BackendWindow* out) {
     }
     xcb_ewmh_get_atoms_reply_wipe(&actions);
   }
+  FillWindowGeometry(win, out);
   return true;
+}
+
+void X11Backend::FillWindowGeometry(xcb_window_t win, BackendWindow* out) {
+  // 获取窗口外框几何
+  out->geometry = BackendRect{};
+  int32_t fx = 0, fy = 0, fw = 0, fh = 0;
+  bool has_extents = false;
+  xcb_get_property_cookie_t ext_cookie =
+      xcb_get_property(conn_, 0, win, ewmh_._NET_FRAME_EXTENTS,
+                       XCB_ATOM_CARDINAL, 0, 4);
+  xcb_get_property_reply_t* ext_reply =
+      xcb_get_property_reply(conn_, ext_cookie, nullptr);
+  if (ext_reply != nullptr) {
+    if (xcb_get_property_value_length(ext_reply) ==
+        4 * static_cast<int>(sizeof(uint32_t))) {
+      const auto* v = static_cast<const uint32_t*>(xcb_get_property_value(ext_reply));
+      fx = static_cast<int32_t>(v[0]);
+      fy = static_cast<int32_t>(v[2]);
+      fw = static_cast<int32_t>(v[1]);
+      fh = static_cast<int32_t>(v[3]);
+      has_extents = true;
+    }
+    free(ext_reply);
+  }
+
+  xcb_get_geometry_reply_t* geom =
+      xcb_get_geometry_reply(conn_, xcb_get_geometry(conn_, win), nullptr);
+  if (geom == nullptr) {
+    return;
+  }
+  out->geometry.x = static_cast<int>(geom->x) - (has_extents ? fx : 0);
+  out->geometry.y = static_cast<int>(geom->y) - (has_extents ? fy : 0);
+  out->geometry.width =
+      static_cast<int>(geom->width) + (has_extents ? fx + fw : 0);
+  out->geometry.height =
+      static_cast<int>(geom->height) + (has_extents ? fy + fh : 0);
+  free(geom);
 }
 
 void X11Backend::SyncClientList() {
@@ -285,8 +338,8 @@ void X11Backend::SyncClientList() {
     if (!ReadWindow(win, &w) || w.skip_taskbar) {
       continue;
     }
-    const uint32_t evmask =
-        XCB_EVENT_MASK_PROPERTY_CHANGE | XCB_EVENT_MASK_STRUCTURE_NOTIFY;
+    const uint32_t evmask = XCB_EVENT_MASK_PROPERTY_CHANGE |
+                             XCB_EVENT_MASK_STRUCTURE_NOTIFY;
     xcb_change_window_attributes(conn_, win, XCB_CW_EVENT_MASK, &evmask);
     windows_[win] = w;
     if (observer_ != nullptr) {
@@ -334,6 +387,51 @@ std::vector<BackendWindow> X11Backend::ListWindows() {
 }
 
 uint32_t X11Backend::ActiveWindow() { return active_id_; }
+
+BackendRect X11Backend::GetWindowGeometry(uint32_t id) {
+  BackendRect rect{};
+  auto it = windows_.find(id);
+  if (it != windows_.end()) {
+    return it->second.geometry;
+  }
+  // 窗口不在已跟踪集合内（如 dock 自身）时，直接查询几何。
+  BackendWindow w;
+  w.id = id;
+  FillWindowGeometry(id, &w);
+  rect = w.geometry;
+  return rect;
+}
+
+uint32_t X11Backend::GetWindowGroupLeader(uint32_t id) {
+  uint32_t leader = id;
+  // 优先使用 WM_CLIENT_LEADER（需要自行 intern 该原子，xcb 未预定义）。
+  xcb_atom_t client_leader_atom = InternAtom(conn_, "WM_CLIENT_LEADER");
+  if (client_leader_atom != XCB_ATOM_NONE) {
+    xcb_get_property_cookie_t cookie =
+        xcb_get_property(conn_, 0, id, client_leader_atom, XCB_ATOM_WINDOW, 0,
+                         1);
+    xcb_get_property_reply_t* reply =
+        xcb_get_property_reply(conn_, cookie, nullptr);
+    if (reply != nullptr) {
+      if (xcb_get_property_value_length(reply) >=
+          static_cast<int>(sizeof(uint32_t))) {
+        leader = *static_cast<const uint32_t*>(xcb_get_property_value(reply));
+      }
+      free(reply);
+    }
+  }
+  // 回退到 WM_HINTS 中的 window_group 字段。
+  if (leader == id) {
+    xcb_icccm_wm_hints_t hints;
+    if (xcb_icccm_get_wm_hints_reply(conn_, xcb_icccm_get_wm_hints(conn_, id),
+                                     &hints, nullptr) != 0) {
+      if (hints.window_group != 0) {
+        leader = hints.window_group;
+      }
+    }
+  }
+  return leader == 0 ? id : leader;
+}
 
 void X11Backend::SendClientMessage(xcb_window_t win, xcb_atom_t type,
                                    const uint32_t data[5]) {

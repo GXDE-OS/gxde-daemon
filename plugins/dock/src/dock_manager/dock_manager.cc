@@ -219,6 +219,9 @@ std::string SerializeTopLevel(
 }  // namespace
 
 DockManager::~DockManager() {
+  if (hide_state_timer_ != 0) {
+    g_source_remove(hide_state_timer_);
+  }
   if (registration_id_ != 0 && connection_ != nullptr) {
     g_dbus_connection_unregister_object(connection_, registration_id_);
   }
@@ -364,6 +367,7 @@ void DockManager::OnWindowChanged(const BackendWindow& window) {
   } else {
     AttachOrCreateEntry(window);
   }
+  scheduleHideStateUpdate();
 }
 
 void DockManager::OnWindowRemoved(uint32_t id) {
@@ -382,6 +386,76 @@ void DockManager::OnActiveWindowChanged(uint32_t id) {
   for (AppEntry* entry : entries_.items()) {
     entry->RefreshActiveState(id);
   }
+  scheduleHideStateUpdate();
+}
+
+void DockManager::scheduleHideStateUpdate() {
+  if (static_cast<HideMode>(settings_.hide_mode()) != HideMode::kSmartHide) {
+    return;
+  }
+  if (hide_state_timer_ != 0) {
+    g_source_remove(hide_state_timer_);
+  }
+  hide_state_timer_ = g_timeout_add(
+      400,
+      +[](gpointer data) -> gboolean {
+        auto* self = static_cast<DockManager*>(data);
+        self->hide_state_timer_ = 0;
+        self->updateHideState();
+        return G_SOURCE_REMOVE;
+      },
+      this);
+}
+
+void DockManager::updateHideState() {
+  if (static_cast<HideMode>(settings_.hide_mode()) != HideMode::kSmartHide) {
+    return;
+  }
+  HideState new_state =
+      shouldHideOnSmartHideMode() ? HideState::kHide : HideState::kShow;
+  if (new_state != hide_state_) {
+    hide_state_ = new_state;
+    EmitManagerPropertyChanged("HideState",
+                               g_variant_new_int32(static_cast<int32_t>(new_state)));
+  }
+}
+
+bool DockManager::shouldHideOnSmartHideMode() const {
+  if (active_window_ == 0) {
+    return false;
+  }
+  BackendRect dock_rect{frontend_window_rect_.x, frontend_window_rect_.y,
+                        static_cast<int>(frontend_window_rect_.width),
+                        static_cast<int>(frontend_window_rect_.height)};
+  if (dock_rect.width <= 0 || dock_rect.height <= 0) {
+    return false;
+  }
+
+  // 收集激活窗口及其同组窗口
+  std::vector<uint32_t> group;
+  if (backend_ != nullptr) {
+    const uint32_t leader = backend_->GetWindowGroupLeader(active_window_);
+    for (const BackendWindow& w : backend_->ListWindows()) {
+      if (w.id == active_window_ ||
+          (leader != 0 && backend_->GetWindowGroupLeader(w.id) == leader)) {
+        group.push_back(w.id);
+      }
+    }
+  }
+  if (group.empty()) {
+    group.push_back(active_window_);
+  }
+
+  for (uint32_t id : group) {
+    BackendRect rect{};
+    if (backend_ != nullptr) {
+      rect = backend_->GetWindowGeometry(id);
+    }
+    if (dock_rect.HasIntersection(rect)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void DockManager::RemoveEntry(AppEntry* entry) {
@@ -614,6 +688,7 @@ gboolean DockManager::OnSetProperty(GDBusConnection* /*connection*/,
   std::string prop = property_name;
   if (prop == "HideMode") {
     self->settings_.set_hide_mode(g_variant_get_int32(value));
+    self->scheduleHideStateUpdate();
   } else if (prop == "DisplayMode") {
     self->settings_.set_display_mode(g_variant_get_int32(value));
   } else if (prop == "Position") {
@@ -704,6 +779,7 @@ void DockManager::OnMethodCall(GDBusConnection* /*connection*/,
     self->frontend_window_rect_ = {x, y, w, h};
     self->EmitManagerPropertyChanged("FrontendWindowRect",
                                      g_variant_new("(iiuu)", x, y, w, h));
+    self->scheduleHideStateUpdate();
     g_dbus_method_invocation_return_value(invocation, nullptr);
   } else if (method == "IsDocked" || method == "IsOnDock") {
     const gchar* file = nullptr;

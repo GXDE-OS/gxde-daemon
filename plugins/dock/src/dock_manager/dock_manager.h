@@ -58,6 +58,11 @@ class DockManager : public WindowObserver {
   void OnWindowRemoved(uint32_t id) override;
   void OnActiveWindowChanged(uint32_t id) override;
 
+  // 智能隐藏：激活窗口（及其同组窗口）的矩形与 dock 矩形重叠时隐藏，否则显示。
+  void updateHideState();
+  void scheduleHideStateUpdate();
+  bool shouldHideOnSmartHideMode() const;
+
   void EmitEntryAdded(const std::string& object_path, int32_t index);
   void EmitEntryRemoved(const std::string& entry_id);
   // The Entries property mirrors the entry object paths; deepin frontends read
@@ -100,6 +105,7 @@ class DockManager : public WindowObserver {
   uint32_t active_window_ = 0;
   Rect frontend_window_rect_;
   HideState hide_state_ = HideState::kUnknown;
+  guint hide_state_timer_ = 0;
   std::map<uint32_t, std::string> identify_methods_;
 };
 

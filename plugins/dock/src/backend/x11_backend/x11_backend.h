@@ -51,10 +51,13 @@ class X11Backend : public WindowBackend {
   bool MoveWindow(uint32_t id) override;
   bool KillClient(uint32_t id) override;
   bool CaptureWindow(uint32_t id, const std::string& out_png_path) override;
+  BackendRect GetWindowGeometry(uint32_t id) override;
+  uint32_t GetWindowGroupLeader(uint32_t id) override;
   const char* Name() const override { return "x11"; }
 
  private:
   bool ReadWindow(xcb_window_t win, BackendWindow* out);
+  void FillWindowGeometry(xcb_window_t win, BackendWindow* out);
   bool IsTaskbarWindow(xcb_window_t win);
   void SyncClientList();
   void SetActiveFromServer();

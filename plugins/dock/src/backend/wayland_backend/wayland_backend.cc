@@ -143,6 +143,10 @@ BackendWindow WaylandBackend::ToBackendWindow(const Tracked& tracked) const {
       (t->capabilities & KYWC_TOPLEVEL_CAPABILITY_SKIP_TASKBAR) != 0;
   w.has_parent = t->parent != nullptr;
   w.allowed_close = true;
+  w.geometry.x = static_cast<int>(t->x);
+  w.geometry.y = static_cast<int>(t->y);
+  w.geometry.width = static_cast<int>(t->width);
+  w.geometry.height = static_cast<int>(t->height);
   return w;
 }
 
@@ -236,6 +240,23 @@ std::vector<BackendWindow> WaylandBackend::ListWindows() {
 }
 
 uint32_t WaylandBackend::ActiveWindow() { return active_id_; }
+
+BackendRect WaylandBackend::GetWindowGeometry(uint32_t id) {
+  BackendRect rect{};
+  auto it = tracked_.find(id);
+  if (it != tracked_.end()) {
+    kywc_toplevel* t = it->second.toplevel;
+    rect.x = static_cast<int>(t->x);
+    rect.y = static_cast<int>(t->y);
+    rect.width = static_cast<int>(t->width);
+    rect.height = static_cast<int>(t->height);
+  }
+  return rect;
+}
+
+uint32_t WaylandBackend::GetWindowGroupLeader(uint32_t id) {
+  return id;
+}
 
 bool WaylandBackend::Activate(uint32_t id) {
   kywc_toplevel* t = Lookup(id);

@@ -28,6 +28,21 @@
 namespace gxde {
 namespace dock {
 
+struct BackendRect {
+  int x = 0;
+  int y = 0;
+  int width = 0;
+  int height = 0;
+
+  bool HasIntersection(const BackendRect& other) const {
+    if (width <= 0 || height <= 0 || other.width <= 0 || other.height <= 0) {
+      return false;
+    }
+    return !(x >= other.x + other.width || other.x >= x + width ||
+             y >= other.y + other.height || other.y >= y + height);
+  }
+};
+
 struct BackendWindow {
   uint32_t id = 0;
   std::string app_id;
@@ -42,6 +57,7 @@ struct BackendWindow {
   bool skip_taskbar = false;
   bool has_parent = false;
   bool allowed_close = true;
+  BackendRect geometry;
 };
 
 class WindowObserver {
@@ -61,6 +77,8 @@ class WindowBackend {
 
   virtual std::vector<BackendWindow> ListWindows() = 0;
   virtual uint32_t ActiveWindow() = 0;
+  virtual BackendRect GetWindowGeometry(uint32_t id) = 0;
+  virtual uint32_t GetWindowGroupLeader(uint32_t id) = 0;
 
   virtual bool Activate(uint32_t id) = 0;
   virtual bool Close(uint32_t id) = 0;
