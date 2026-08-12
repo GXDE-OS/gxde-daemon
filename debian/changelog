@@ -1,12 +1,13 @@
-gxde-daemon (1.3.7) UNRELEASED; urgency=medium
+gxde-daemon (1.3.9) UNRELEASED; urgency=medium
 
   [ CharOfString ]
   * 新增 Dock 右键菜单国际化支持，新增中文、俄语、西班牙语、法语、德语、日语、韩语、葡萄牙语翻译
 
   [ gfdgd_xi ]
   * 尝试修复切换会话后插件管理器不能正确重启dock插件的问题
+  * 修复在 x11 下 dock 的智能隐藏失效的问题
 
- -- gfdgd_xi <3025613752@qq.com>  Tue, 04 Aug 2026 13:51:32 +0800
+ -- gfdgd_xi <3025613752@qq.com>  Wed, 12 Aug 2026 09:58:37 +0800
 
 gxde-daemon (1.3.5) UNRELEASED; urgency=medium
 
