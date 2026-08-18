@@ -19,7 +19,8 @@ PKGDIR = debian/gxde-daemon
 override_dh_auto_configure:
 
 override_dh_auto_build:
-	cmake -S $(DOCK_SRC) -B $(DOCK_SRC)/build -DCMAKE_BUILD_TYPE=Release
+	cmake -S $(DOCK_SRC) -B $(DOCK_SRC)/build -DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr
 	cmake --build $(DOCK_SRC)/build -j$$(nproc)
 	cmake -S $(DM_SRC) -B $(DM_SRC)/build -DCMAKE_BUILD_TYPE=Release
 	cmake --build $(DM_SRC)/build -j$$(nproc)
@@ -33,6 +34,9 @@ override_dh_auto_install:
 		$(PKGDIR)/usr/libexec/gxde-daemon/gtk-theme-inject/gxde-gtk-theme-inject
 	install -Dm755 $(DM_SRC)/build/gxde-daemon-manager \
 		$(PKGDIR)/usr/libexec/gxde-daemon/daemon-manager/gxde-daemon-manager
+	mkdir -p $(PKGDIR)/usr/share/gxde-daemon/dock/translations
+	install -m644 $(DOCK_SRC)/translations/*.json \
+		$(PKGDIR)/usr/share/gxde-daemon/dock/translations/
 
 override_dh_auto_clean:
 	rm -rf $(DOCK_SRC)/build $(DM_SRC)/build $(GTK_INJECT_SRC)/build
