@@ -34,3 +34,8 @@ build*/
 debian/gxde-daemon.postrm.debhelper
 debian/gxde-daemon.postinst.debhelper
 .lock
+
+# Debian packaging artifacts
+*.deb
+*.buildinfo
+*.changes
