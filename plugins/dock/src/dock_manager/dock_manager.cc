@@ -283,14 +283,14 @@ bool DockManager::Start(GDBusConnection* connection) {
     return false;
   }
 
+  LoadDockedApps();
+
   backend_ = CreateWindowBackend();
   if (!backend_->Init(this)) {
     g_warning("(Dock) MGR: window backend init failed");
     return false;
   }
   g_message("(Dock) MGR: backend=%s", backend_->Name());
-
-  LoadDockedApps();
 
   for (const BackendWindow& window : backend_->ListWindows()) {
     OnWindowAdded(window);
@@ -459,8 +459,11 @@ bool DockManager::shouldHideOnSmartHideMode() const {
 }
 
 void DockManager::RemoveEntry(AppEntry* entry) {
-  EmitEntryRemoved(entry->id());
   std::unique_ptr<AppEntry> owned = entries_.Remove(entry);
+  if (owned == nullptr) {
+    return;
+  }
+  EmitEntryRemoved(owned->id());
 }
 
 bool DockManager::DockEntry(AppEntry* entry) {
@@ -830,8 +833,10 @@ void DockManager::OnMethodCall(GDBusConnection* /*connection*/,
     gint32 index = 0;
     gint32 new_index = 0;
     g_variant_get(parameters, "(ii)", &index, &new_index);
-    self->entries_.Move(index, new_index);
-    self->SaveDockedApps();
+    if (self->entries_.Move(index, new_index)) {
+      self->SaveDockedApps();
+      self->EmitEntriesChanged();
+    }
     g_dbus_method_invocation_return_value(invocation, nullptr);
   } else if (method == "QueryWindowIdentifyMethod") {
     guint32 win = win_arg();
