@@ -1,9 +1,12 @@
-gxde-daemon (1.3.10) UNRELEASED; urgency=medium
+gxde-daemon (1.3.11) UNRELEASED; urgency=medium
 
   [ shenmo ]
   * 修复 Dock 无法正确加载 zh_CN 等语言翻译的问题：构建时使用 /usr 作为安装前缀，并把 Dock 翻译 JSON 文件安装到 /usr/share/gxde-daemon/dock/translations
 
- -- shenmo <shenmo@spark-app.store>  Tue, 18 Aug 2026 20:34:47 +0800
+  [ CharOfString ]
+  * 对dock图标混乱的增强修复，可选，主修复在Dock侧
+
+ -- gfdgd_xi <3025613752@qq.com>  Tue, 25 Aug 2026 10:03:49 +0800
 
 gxde-daemon (1.3.9) UNRELEASED; urgency=medium
 
