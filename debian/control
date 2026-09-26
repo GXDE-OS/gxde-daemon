@@ -12,7 +12,7 @@ Build-Depends:
  libcjson-dev,
  libgdk-pixbuf-2.0-dev,
  libwayland-dev,
- gxde-wlcom-client,
+ libwayland-bin,
  libxcb1-dev,
  libxcb-ewmh-dev,
  libxcb-icccm4-dev

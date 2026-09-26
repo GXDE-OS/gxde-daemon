@@ -32,7 +32,7 @@ namespace dock {
 std::unique_ptr<WindowBackend> CreateWindowBackend() {
   const char* wayland_display = std::getenv("WAYLAND_DISPLAY");
   if (wayland_display != nullptr && wayland_display[0] != '\0') {
-    g_message("(Dock) Factory: using Wayland (libkywc) backend");
+    g_message("(Dock) Factory: using Wayland (kywc protocol) backend");
     return std::make_unique<WaylandBackend>();
   }
   g_message("(Dock) Factory: using X11 backend");

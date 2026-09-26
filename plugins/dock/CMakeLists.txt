@@ -8,7 +8,7 @@
 # (at your option) any later version.
 
 cmake_minimum_required(VERSION 3.16)
-project(gxde-dock LANGUAGES CXX)
+project(gxde-dock LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -29,12 +29,42 @@ pkg_check_modules(DEPS REQUIRED
   gdk-pixbuf-2.0
   libcjson
   wayland-client
-  kywc
   xcb
   xcb-ewmh
   xcb-icccm)
 
+# Generate client bindings for the gxde-wlcom (kywc) protocols we speak.
+pkg_get_variable(WAYLAND_SCANNER wayland-scanner wayland_scanner)
+if(NOT WAYLAND_SCANNER)
+  find_program(WAYLAND_SCANNER wayland-scanner)
+endif()
+if(NOT WAYLAND_SCANNER)
+  message(FATAL_ERROR "wayland-scanner not found")
+endif()
+
+set(PROTOCOL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/protocols)
+set(PROTOCOL_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/protocols)
+file(MAKE_DIRECTORY ${PROTOCOL_OUT_DIR})
+set(PROTOCOL_SOURCES)
+foreach(protocol kywc-toplevel-v1 kywc-capture-v1)
+  set(xml ${PROTOCOL_DIR}/${protocol}.xml)
+  set(header ${PROTOCOL_OUT_DIR}/${protocol}-client-protocol.h)
+  set(code ${PROTOCOL_OUT_DIR}/${protocol}-protocol.c)
+  add_custom_command(
+    OUTPUT ${header}
+    COMMAND ${WAYLAND_SCANNER} client-header ${xml} ${header}
+    DEPENDS ${xml}
+    VERBATIM)
+  add_custom_command(
+    OUTPUT ${code}
+    COMMAND ${WAYLAND_SCANNER} private-code ${xml} ${code}
+    DEPENDS ${xml}
+    VERBATIM)
+  list(APPEND PROTOCOL_SOURCES ${header} ${code})
+endforeach()
+
 add_executable(gxde-dock-daemon
+  ${PROTOCOL_SOURCES}
   src/main.cc
   src/settings/settings.cc
   src/app_info/app_info.cc
@@ -47,7 +77,7 @@ add_executable(gxde-dock-daemon
   src/backend/x11_backend/x11_backend.cc
   src/i18n/i18n.cc)
 
-target_include_directories(gxde-dock-daemon PRIVATE ${DEPS_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(gxde-dock-daemon PRIVATE ${DEPS_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR} ${PROTOCOL_OUT_DIR})
 target_compile_options(gxde-dock-daemon PRIVATE ${DEPS_CFLAGS_OTHER})
 target_link_libraries(gxde-dock-daemon PRIVATE ${DEPS_LIBRARIES})
 target_link_directories(gxde-dock-daemon PRIVATE ${DEPS_LIBRARY_DIRS})

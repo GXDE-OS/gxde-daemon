@@ -22,54 +22,156 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <signal.h>
 #include <sys/mman.h>
+#include <unistd.h>
 #include <wayland-client.h>
 
+#include <algorithm>
+#include <cerrno>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <string>
 #include <vector>
 
+#include "kywc-capture-v1-client-protocol.h"
+#include "kywc-toplevel-v1-client-protocol.h"
+
 namespace gxde {
 namespace dock {
 
 namespace {
 
-WaylandBackend* BackendOf(kywc_toplevel* toplevel) {
-  kywc_context* ctx = kywc_toplevel_get_context(toplevel);
-  return static_cast<WaylandBackend*>(kywc_context_get_user_data(ctx));
+using Toplevel = WaylandBackend::Toplevel;
+
+// Highest protocol versions this backend understands.
+constexpr uint32_t kToplevelManagerVersion = 1;
+constexpr uint32_t kCaptureManagerVersion = 1;
+
+template <typename T>
+void UpdateField(Toplevel* toplevel, T* field, const T& value) {
+  if (*field != value) {
+    *field = value;
+    toplevel->dirty = true;
+  }
 }
 
-void HandleNewToplevel(kywc_context* /*ctx*/, kywc_toplevel* toplevel,
-                       void* data) {
-  static_cast<WaylandBackend*>(data)->HandleNewToplevel(toplevel);
+std::string SafeString(const char* s) { return s != nullptr ? s : ""; }
+
+// KYWC TOPLEVEL_V1
+void ToplevelClosed(void* data, kywc_toplevel_v1* /*handle*/) {
+  auto* t = static_cast<Toplevel*>(data);
+  t->backend->HandleToplevelClosed(t);
 }
 
-void HandleToplevelState(kywc_toplevel* toplevel, uint32_t mask) {
-  BackendOf(toplevel)->HandleToplevelState(toplevel, mask);
+void ToplevelDone(void* data, kywc_toplevel_v1* /*handle*/) {
+  auto* t = static_cast<Toplevel*>(data);
+  t->backend->HandleToplevelDone(t);
 }
 
-void HandleToplevelDestroy(kywc_toplevel* toplevel) {
-  BackendOf(toplevel)->HandleToplevelDestroy(toplevel);
+void ToplevelTitle(void* data, kywc_toplevel_v1* /*handle*/,
+                   const char* title) {
+  auto* t = static_cast<Toplevel*>(data);
+  UpdateField(t, &t->title, SafeString(title));
 }
 
-const struct kywc_toplevel_interface kToplevelImpl = {
-    .state = HandleToplevelState,
-    .destroy = HandleToplevelDestroy,
+void ToplevelAppId(void* data, kywc_toplevel_v1* /*handle*/,
+                   const char* app_id) {
+  auto* t = static_cast<Toplevel*>(data);
+  UpdateField(t, &t->app_id, SafeString(app_id));
+}
+
+void ToplevelPrimaryOutput(void* /*data*/, kywc_toplevel_v1* /*handle*/,
+                           const char* /*output*/) {}
+
+void ToplevelWorkspaceEnter(void* /*data*/, kywc_toplevel_v1* /*handle*/,
+                            const char* /*workspace*/) {}
+
+void ToplevelWorkspaceLeave(void* /*data*/, kywc_toplevel_v1* /*handle*/,
+                            const char* /*workspace*/) {}
+
+void ToplevelCapabilities(void* data, kywc_toplevel_v1* /*handle*/,
+                          uint32_t flags) {
+  auto* t = static_cast<Toplevel*>(data);
+  UpdateField(t, &t->capabilities, flags);
+}
+
+void ToplevelState(void* data, kywc_toplevel_v1* /*handle*/, uint32_t state) {
+  auto* t = static_cast<Toplevel*>(data);
+  UpdateField(t, &t->state, state);
+}
+
+void ToplevelParent(void* data, kywc_toplevel_v1* /*handle*/,
+                    kywc_toplevel_v1* parent) {
+  auto* t = static_cast<Toplevel*>(data);
+  Toplevel* parent_toplevel =
+      parent != nullptr
+          ? static_cast<Toplevel*>(kywc_toplevel_v1_get_user_data(parent))
+          : nullptr;
+  UpdateField(t, &t->parent, parent_toplevel);
+}
+
+void ToplevelIcon(void* data, kywc_toplevel_v1* /*handle*/, const char* name) {
+  auto* t = static_cast<Toplevel*>(data);
+  UpdateField(t, &t->icon, SafeString(name));
+}
+
+void ToplevelGeometry(void* data, kywc_toplevel_v1* /*handle*/, int32_t x,
+                      int32_t y, uint32_t width, uint32_t height) {
+  auto* t = static_cast<Toplevel*>(data);
+  UpdateField(t, &t->x, x);
+  UpdateField(t, &t->y, y);
+  UpdateField(t, &t->width, width);
+  UpdateField(t, &t->height, height);
+}
+
+void ToplevelPid(void* data, kywc_toplevel_v1* /*handle*/, uint32_t pid) {
+  auto* t = static_cast<Toplevel*>(data);
+  UpdateField(t, &t->pid, pid);
+}
+
+const kywc_toplevel_v1_listener kToplevelListener = {
+    .closed = ToplevelClosed,
+    .done = ToplevelDone,
+    .title = ToplevelTitle,
+    .app_id = ToplevelAppId,
+    .primary_output = ToplevelPrimaryOutput,
+    .workspace_enter = ToplevelWorkspaceEnter,
+    .workspace_leave = ToplevelWorkspaceLeave,
+    .capabilities = ToplevelCapabilities,
+    .state = ToplevelState,
+    .parent = ToplevelParent,
+    .icon = ToplevelIcon,
+    .geometry = ToplevelGeometry,
+    .pid = ToplevelPid,
 };
 
-const struct kywc_context_interface kContextImpl = {
-    .create = nullptr,
-    .destroy = nullptr,
-    .new_output = nullptr,
-    .new_toplevel = HandleNewToplevel,
-    .new_workspace = nullptr,
+void ManagerToplevel(void* data, kywc_toplevel_manager_v1* /*manager*/,
+                     kywc_toplevel_v1* handle, const char* uuid) {
+  static_cast<WaylandBackend*>(data)->HandleNewToplevel(handle, uuid);
+}
+
+void ManagerFinished(void* data, kywc_toplevel_manager_v1* /*manager*/) {
+  static_cast<WaylandBackend*>(data)->HandleManagerFinished();
+}
+
+const kywc_toplevel_manager_v1_listener kManagerListener = {
+    .toplevel = ManagerToplevel,
+    .finished = ManagerFinished,
 };
 
-uint32_t IdOf(kywc_toplevel* toplevel) {
-  return static_cast<uint32_t>(
-      reinterpret_cast<uintptr_t>(kywc_toplevel_get_user_data(toplevel)));
+void RegistryGlobal(void* data, wl_registry* registry, uint32_t name,
+                    const char* interface, uint32_t version) {
+  static_cast<WaylandBackend*>(data)->HandleGlobal(registry, name, interface,
+                                                   version);
 }
+
+void RegistryGlobalRemove(void* /*data*/, wl_registry* /*registry*/,
+                          uint32_t /*name*/) {}
+
+const wl_registry_listener kRegistryListener = {
+    .global = RegistryGlobal,
+    .global_remove = RegistryGlobalRemove,
+};
 
 }  // namespace
 
@@ -80,25 +182,53 @@ WaylandBackend::~WaylandBackend() {
   if (io_channel_ != nullptr) {
     g_io_channel_unref(io_channel_);
   }
-  if (context_ != nullptr) {
-    kywc_context_destroy(context_);
+  for (auto& [id, toplevel] : tracked_) {
+    kywc_toplevel_v1_destroy(toplevel->handle);
+  }
+  tracked_.clear();
+  if (toplevel_manager_ != nullptr) {
+    kywc_toplevel_manager_v1_stop(toplevel_manager_);
+    kywc_toplevel_manager_v1_destroy(toplevel_manager_);
+  }
+  if (capture_manager_ != nullptr) {
+    kywc_capture_manager_v1_destroy(capture_manager_);
+  }
+  if (registry_ != nullptr) {
+    wl_registry_destroy(registry_);
+  }
+  if (display_ != nullptr) {
+    wl_display_flush(display_);
+    wl_display_disconnect(display_);
   }
 }
 
 bool WaylandBackend::Init(WindowObserver* observer) {
   observer_ = observer;
-  context_ = kywc_context_create(
-      nullptr,
-      KYWC_CONTEXT_CAPABILITY_TOPLEVEL | KYWC_CONTEXT_CAPABILITY_THUMBNAIL,
-      &kContextImpl, this);
-  if (context_ == nullptr) {
+  display_ = wl_display_connect(nullptr);
+  if (display_ == nullptr) {
+    g_warning("(Dock) Wayland: Connect to compositor failed");
     return false;
   }
 
-  int fd = kywc_context_get_fd(context_);
-  if (fd < 0) {
+  registry_ = wl_display_get_registry(display_);
+  wl_registry_add_listener(registry_, &kRegistryListener, this);
+  if (wl_display_roundtrip(display_) < 0) {
+    g_warning("(Dock) Wayland: Registry roundtrip failed");
     return false;
   }
+  if (toplevel_manager_ == nullptr) {
+    g_warning("(Dock) Wayland: Compositor lacks %s",
+              kywc_toplevel_manager_v1_interface.name);
+    return false;
+  }
+  if (capture_manager_ == nullptr) {
+    g_message("(Dock) Wayland: Compositor lacks %s, falling back to grim",
+              kywc_capture_manager_v1_interface.name);
+  }
+  // Receive the initial set of toplevels and their properties.
+  wl_display_roundtrip(display_);
+
+  int fd = wl_display_get_fd(display_);
   io_channel_ = g_io_channel_unix_new(fd);
   // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
   auto watch_cond = static_cast<GIOCondition>(G_IO_IN | G_IO_HUP | G_IO_ERR);
@@ -107,79 +237,103 @@ bool WaylandBackend::Init(WindowObserver* observer) {
   return true;
 }
 
+void WaylandBackend::HandleGlobal(wl_registry* registry, uint32_t name,
+                                  const char* interface, uint32_t version) {
+  if (toplevel_manager_ == nullptr &&
+      std::strcmp(interface, kywc_toplevel_manager_v1_interface.name) == 0) {
+    toplevel_manager_ = static_cast<kywc_toplevel_manager_v1*>(wl_registry_bind(
+        registry, name, &kywc_toplevel_manager_v1_interface,
+        std::min(version, kToplevelManagerVersion)));
+    kywc_toplevel_manager_v1_add_listener(toplevel_manager_, &kManagerListener,
+                                          this);
+  } else if (capture_manager_ == nullptr &&
+             std::strcmp(interface, kywc_capture_manager_v1_interface.name) ==
+                 0) {
+    capture_manager_ = static_cast<kywc_capture_manager_v1*>(wl_registry_bind(
+        registry, name, &kywc_capture_manager_v1_interface,
+        std::min(version, kCaptureManagerVersion)));
+  }
+}
+
 gboolean WaylandBackend::OnFdReadable(GIOChannel* /*source*/,
                                       GIOCondition condition, gpointer data) {
   auto* self = static_cast<WaylandBackend*>(data);
   if ((condition & (G_IO_HUP | G_IO_ERR)) != 0) {
     g_warning("(Dock) Wayland: Connection lost");
+    self->io_watch_ = 0;
     return G_SOURCE_REMOVE;
   }
-  if (kywc_context_process(self->context_) != 0) {
+  
+  while (wl_display_prepare_read(self->display_) != 0) {
+    wl_display_dispatch_pending(self->display_);
+  }
+  if (wl_display_read_events(self->display_) < 0 ||
+      wl_display_dispatch_pending(self->display_) < 0) {
     g_warning("(Dock) Wayland: Dispatch failed");
+    self->io_watch_ = 0;
+    return G_SOURCE_REMOVE;
+  }
+  if (wl_display_flush(self->display_) < 0 && errno != EAGAIN) {
+    g_warning("(Dock) Wayland: Flush failed");
+    self->io_watch_ = 0;
     return G_SOURCE_REMOVE;
   }
   return G_SOURCE_CONTINUE;
 }
 
 void WaylandBackend::Flush() {
-  if (context_ == nullptr) {
+  if (display_ == nullptr) {
     return;
   }
-  wl_display_flush(kywc_context_get_display(context_));
+  wl_display_flush(display_);
 }
 
-BackendWindow WaylandBackend::ToBackendWindow(const Tracked& tracked) const {
-  kywc_toplevel* t = tracked.toplevel;
+BackendWindow WaylandBackend::ToBackendWindow(const Toplevel& t) const {
   BackendWindow w;
-  w.id = tracked.id;
-  w.app_id = t->app_id != nullptr ? t->app_id : "";
-  w.title = t->title != nullptr ? t->title : "";
-  w.icon = t->icon != nullptr ? t->icon : "";
-  w.pid = t->pid;
-  w.minimized = t->minimized;
-  w.maximized = t->maximized;
-  w.active = t->activated;
+  w.id = t.id;
+  w.app_id = t.app_id;
+  w.title = t.title;
+  w.icon = t.icon;
+  w.pid = t.pid;
+  w.minimized = (t.state & KYWC_TOPLEVEL_V1_STATE_MINIMIZED) != 0;
+  w.maximized = (t.state & KYWC_TOPLEVEL_V1_STATE_MAXIMIZED) != 0;
+  w.active = (t.state & KYWC_TOPLEVEL_V1_STATE_ACTIVATED) != 0;
   w.skip_taskbar =
-      (t->capabilities & KYWC_TOPLEVEL_CAPABILITY_SKIP_TASKBAR) != 0;
-  w.has_parent = t->parent != nullptr;
+      (t.capabilities & KYWC_TOPLEVEL_V1_CAPABILITY_SKIP_TASKBAR) != 0;
+  w.has_parent = t.parent != nullptr;
   w.allowed_close = true;
-  w.geometry.x = static_cast<int>(t->x);
-  w.geometry.y = static_cast<int>(t->y);
-  w.geometry.width = static_cast<int>(t->width);
-  w.geometry.height = static_cast<int>(t->height);
+  w.geometry.x = static_cast<int>(t.x);
+  w.geometry.y = static_cast<int>(t.y);
+  w.geometry.width = static_cast<int>(t.width);
+  w.geometry.height = static_cast<int>(t.height);
   return w;
 }
 
-kywc_toplevel* WaylandBackend::Lookup(uint32_t id) const {
+Toplevel* WaylandBackend::Lookup(uint32_t id) const {
   auto it = tracked_.find(id);
-  return it == tracked_.end() ? nullptr : it->second.toplevel;
+  return it == tracked_.end() ? nullptr : it->second.get();
 }
 
-void WaylandBackend::HandleNewToplevel(kywc_toplevel* toplevel) {
-  uint32_t id = next_id_++;
-  Tracked tracked;
-  tracked.id = id;
-  tracked.toplevel = toplevel;
-  tracked.reported = false;
-  tracked_[id] = tracked;
-
-  kywc_toplevel_set_user_data(
-      toplevel, reinterpret_cast<void*>(static_cast<uintptr_t>(id)));
-  kywc_toplevel_set_interface(toplevel, &kToplevelImpl);
-
-  HandleToplevelState(toplevel, KYWC_TOPLEVEL_STATE_APP_ID);
+void WaylandBackend::HandleNewToplevel(kywc_toplevel_v1* handle,
+                                       const char* uuid) {
+  auto toplevel = std::make_unique<Toplevel>();
+  toplevel->backend = this;
+  toplevel->handle = handle;
+  toplevel->id = next_id_++;
+  toplevel->uuid = SafeString(uuid);
+  kywc_toplevel_v1_add_listener(handle, &kToplevelListener, toplevel.get());
+  tracked_[toplevel->id] = std::move(toplevel);
 }
 
-void WaylandBackend::HandleToplevelState(kywc_toplevel* toplevel,
-                                         uint32_t /*mask*/) {
-  uint32_t id = IdOf(toplevel);
-  auto it = tracked_.find(id);
-  if (it == tracked_.end()) {
+void WaylandBackend::HandleToplevelDone(Toplevel* toplevel) {
+  if (toplevel->initialized && !toplevel->dirty) {
     return;
   }
-  Tracked& tracked = it->second;
+  toplevel->initialized = true;
+  toplevel->dirty = false;
 
-  if (toplevel->activated) {
+  uint32_t id = toplevel->id;
+  if ((toplevel->state & KYWC_TOPLEVEL_V1_STATE_ACTIVATED) != 0) {
     if (active_id_ != id) {
       active_id_ = id;
       if (observer_ != nullptr) {
@@ -193,15 +347,13 @@ void WaylandBackend::HandleToplevelState(kywc_toplevel* toplevel,
     }
   }
 
-  bool skip =
-      (toplevel->capabilities & KYWC_TOPLEVEL_CAPABILITY_SKIP_TASKBAR) != 0;
-  BackendWindow window = ToBackendWindow(tracked);
+  BackendWindow window = ToBackendWindow(*toplevel);
 
-  if (!tracked.reported) {
-    if (skip || window.app_id.empty()) {
+  if (!toplevel->reported) {
+    if (window.skip_taskbar || window.app_id.empty()) {
       return;
     }
-    tracked.reported = true;
+    toplevel->reported = true;
     if (observer_ != nullptr) {
       observer_->OnWindowAdded(window);
     }
@@ -213,14 +365,18 @@ void WaylandBackend::HandleToplevelState(kywc_toplevel* toplevel,
   }
 }
 
-void WaylandBackend::HandleToplevelDestroy(kywc_toplevel* toplevel) {
-  uint32_t id = IdOf(toplevel);
-  auto it = tracked_.find(id);
-  if (it == tracked_.end()) {
-    return;
+void WaylandBackend::HandleToplevelClosed(Toplevel* toplevel) {
+  uint32_t id = toplevel->id;
+  bool reported = toplevel->reported;
+
+  for (auto& [other_id, other] : tracked_) {
+    if (other->parent == toplevel) {
+      other->parent = nullptr;
+    }
   }
-  bool reported = it->second.reported;
-  tracked_.erase(it);
+  kywc_toplevel_v1_destroy(toplevel->handle);
+  tracked_.erase(id);
+
   if (active_id_ == id) {
     active_id_ = 0;
   }
@@ -229,11 +385,17 @@ void WaylandBackend::HandleToplevelDestroy(kywc_toplevel* toplevel) {
   }
 }
 
+void WaylandBackend::HandleManagerFinished() {
+  g_warning("(Dock) Wayland: Compositor finished the toplevel manager");
+  kywc_toplevel_manager_v1_destroy(toplevel_manager_);
+  toplevel_manager_ = nullptr;
+}
+
 std::vector<BackendWindow> WaylandBackend::ListWindows() {
   std::vector<BackendWindow> result;
-  for (const auto& [id, tracked] : tracked_) {
-    if (tracked.reported) {
-      result.push_back(ToBackendWindow(tracked));
+  for (const auto& [id, toplevel] : tracked_) {
+    if (toplevel->reported) {
+      result.push_back(ToBackendWindow(*toplevel));
     }
   }
   return result;
@@ -243,9 +405,8 @@ uint32_t WaylandBackend::ActiveWindow() { return active_id_; }
 
 BackendRect WaylandBackend::GetWindowGeometry(uint32_t id) {
   BackendRect rect{};
-  auto it = tracked_.find(id);
-  if (it != tracked_.end()) {
-    kywc_toplevel* t = it->second.toplevel;
+  Toplevel* t = Lookup(id);
+  if (t != nullptr) {
     rect.x = static_cast<int>(t->x);
     rect.y = static_cast<int>(t->y);
     rect.width = static_cast<int>(t->width);
@@ -259,47 +420,47 @@ uint32_t WaylandBackend::GetWindowGroupLeader(uint32_t id) {
 }
 
 bool WaylandBackend::Activate(uint32_t id) {
-  kywc_toplevel* t = Lookup(id);
+  Toplevel* t = Lookup(id);
   if (t == nullptr) {
     return false;
   }
-  if (t->minimized) {
-    kywc_toplevel_unset_minimized(t);
+  if ((t->state & KYWC_TOPLEVEL_V1_STATE_MINIMIZED) != 0) {
+    kywc_toplevel_v1_unset_minimized(t->handle);
   }
-  kywc_toplevel_activate(t);
+  kywc_toplevel_v1_activate(t->handle);
   Flush();
   return true;
 }
 
 bool WaylandBackend::Close(uint32_t id) {
-  kywc_toplevel* t = Lookup(id);
+  Toplevel* t = Lookup(id);
   if (t == nullptr) {
     return false;
   }
-  kywc_toplevel_close(t);
+  kywc_toplevel_v1_close(t->handle);
   Flush();
   return true;
 }
 
 bool WaylandBackend::Minimize(uint32_t id) {
-  kywc_toplevel* t = Lookup(id);
+  Toplevel* t = Lookup(id);
   if (t == nullptr) {
     return false;
   }
-  kywc_toplevel_set_minimized(t);
+  kywc_toplevel_v1_set_minimized(t->handle);
   Flush();
   return true;
 }
 
 bool WaylandBackend::Maximize(uint32_t id) {
-  kywc_toplevel* t = Lookup(id);
+  Toplevel* t = Lookup(id);
   if (t == nullptr) {
     return false;
   }
-  if (t->maximized) {
-    kywc_toplevel_unset_maximized(t);
+  if ((t->state & KYWC_TOPLEVEL_V1_STATE_MAXIMIZED) != 0) {
+    kywc_toplevel_v1_unset_maximized(t->handle);
   } else {
-    kywc_toplevel_set_maximized(t, nullptr);
+    kywc_toplevel_v1_set_maximized(t->handle, nullptr);
   }
   Flush();
   return true;
@@ -315,21 +476,21 @@ bool WaylandBackend::MoveWindow(uint32_t id) {
 }
 
 bool WaylandBackend::KillClient(uint32_t id) {
-  kywc_toplevel* t = Lookup(id);
+  Toplevel* t = Lookup(id);
   if (t == nullptr) {
     return false;
   }
   if (t->pid != 0) {
     return kill(static_cast<pid_t>(t->pid), SIGKILL) == 0;
   }
-  kywc_toplevel_close(t);
+  kywc_toplevel_v1_close(t->handle);
   Flush();
   return true;
 }
 
 bool WaylandBackend::CaptureWindow(uint32_t id,
                                    const std::string& out_png_path) {
-  kywc_toplevel* t = Lookup(id);
+  Toplevel* t = Lookup(id);
   if (t == nullptr) {
     return false;
   }
@@ -338,7 +499,10 @@ bool WaylandBackend::CaptureWindow(uint32_t id,
     return true;
   }
 
-  if (t->minimized || t->width == 0 || t->height == 0) {
+  // The capture roundtrips dispatch events, so the window may be gone now.
+  t = Lookup(id);
+  if (t == nullptr || (t->state & KYWC_TOPLEVEL_V1_STATE_MINIMIZED) != 0 ||
+      t->width == 0 || t->height == 0) {
     return false;
   }
   gchar* geometry =
@@ -406,41 +570,34 @@ bool DrmChannelLayout(uint32_t format, int* r, int* g, int* b, int* a,
   }
 }
 
-}  // namespace
-
-bool WaylandBackend::OnThumbnailBuffer(
-    kywc_thumbnail* /*thumbnail*/, const struct kywc_thumbnail_buffer* buffer,
-    void* data) {
-  auto* req = static_cast<CaptureRequest*>(data);
-  req->done = true;
-
-  bool is_dmabuf = (buffer->flags & KYWC_THUMBNAIL_BUFFER_IS_DMABUF) != 0;
-  bool mappable = !is_dmabuf || buffer->modifier == kDrmModifierLinear ||
-                  buffer->modifier == kDrmModifierInvalid;
+// Converts a captured frame into a PNG at |path|.
+bool SaveFrame(int fd, uint32_t format, uint32_t width, uint32_t height,
+               uint32_t offset, uint32_t stride, uint64_t modifier,
+               uint32_t flags, const std::string& path) {
+  bool is_dmabuf = (flags & KYWC_CAPTURE_FRAME_V1_FLAGS_DMABUF) != 0;
+  bool mappable = !is_dmabuf || modifier == kDrmModifierLinear ||
+                  modifier == kDrmModifierInvalid;
   int r = 0;
   int g = 0;
   int b = 0;
   int a = 0;
   bool has_alpha = false;
-  if (!mappable ||
-      !DrmChannelLayout(buffer->format, &r, &g, &b, &a, &has_alpha)) {
+  if (!mappable || !DrmChannelLayout(format, &r, &g, &b, &a, &has_alpha)) {
     return false;
   }
 
-  size_t map_size = static_cast<size_t>(buffer->offset) +
-                    static_cast<size_t>(buffer->stride) * buffer->height;
-  void* map = mmap(nullptr, map_size, PROT_READ, MAP_SHARED, buffer->fd, 0);
+  size_t map_size =
+      static_cast<size_t>(offset) + static_cast<size_t>(stride) * height;
+  void* map = mmap(nullptr, map_size, PROT_READ, MAP_SHARED, fd, 0);
   if (map == MAP_FAILED) {
     return false;
   }
 
-  const uint8_t* base = static_cast<const uint8_t*>(map) + buffer->offset;
-  const uint32_t width = buffer->width;
-  const uint32_t height = buffer->height;
+  const uint8_t* base = static_cast<const uint8_t*>(map) + offset;
   auto* rgba =
       static_cast<guint8*>(g_malloc(static_cast<gsize>(width) * height * 4));
   for (uint32_t y = 0; y < height; ++y) {
-    const uint8_t* row = base + static_cast<size_t>(y) * buffer->stride;
+    const uint8_t* row = base + static_cast<size_t>(y) * stride;
     for (uint32_t x = 0; x < width; ++x) {
       const uint8_t* px = row + static_cast<size_t>(x) * 4;
       guint8* out = rgba + (static_cast<size_t>(y) * width + x) * 4;
@@ -456,47 +613,75 @@ bool WaylandBackend::OnThumbnailBuffer(
       rgba, GDK_COLORSPACE_RGB, TRUE, 8, width, height, width * 4,
       [](guchar* pixels, gpointer) { g_free(pixels); }, nullptr);
   GError* error = nullptr;
-  req->ok =
-      gdk_pixbuf_save(pixbuf, req->path.c_str(), "png", &error, nullptr) != 0;
+  bool ok = gdk_pixbuf_save(pixbuf, path.c_str(), "png", &error, nullptr) != 0;
   g_object_unref(pixbuf);
-  if (!req->ok) {
+  if (!ok) {
     g_warning("(Dock) Wayland: Save thumbnail failed: %s",
               error != nullptr ? error->message : "unknown");
     g_clear_error(&error);
   }
-  return false;
+  return ok;
 }
 
-void WaylandBackend::OnThumbnailDestroy(kywc_thumbnail* /*thumbnail*/,
-                                        void* data) {
-  static_cast<CaptureRequest*>(data)->destroyed = true;
+void FrameFailed(void* data, kywc_capture_frame_v1* /*frame*/) {
+  static_cast<WaylandBackend::CaptureRequest*>(data)->done = true;
 }
 
-bool WaylandBackend::CaptureViaThumbnail(kywc_toplevel* toplevel,
+void FrameCancelled(void* data, kywc_capture_frame_v1* /*frame*/) {
+  static_cast<WaylandBackend::CaptureRequest*>(data)->done = true;
+}
+
+void FrameBuffer(void* data, kywc_capture_frame_v1* frame, int32_t fd,
+                 uint32_t format, uint32_t width, uint32_t height,
+                 uint32_t offset, uint32_t stride, uint32_t modifier_hi,
+                 uint32_t modifier_lo, uint32_t flags) {
+  auto* req = static_cast<WaylandBackend::CaptureRequest*>(data);
+  uint64_t modifier = (static_cast<uint64_t>(modifier_hi) << 32) | modifier_lo;
+  req->ok = SaveFrame(fd, format, width, height, offset, stride, modifier,
+                      flags, req->path);
+  req->done = true;
+  close(fd);
+  kywc_capture_frame_v1_release_buffer(frame, /*want_buffer=*/0);
+}
+
+// Only sent to version 2 clients; we bind version 1.
+void FrameBufferWithPlane(void* /*data*/, kywc_capture_frame_v1* /*frame*/,
+                          uint32_t /*index*/, int32_t fd, uint32_t /*offset*/,
+                          uint32_t /*stride*/) {
+  close(fd);
+}
+
+void FrameBufferDone(void* /*data*/, kywc_capture_frame_v1* /*frame*/) {}
+
+const kywc_capture_frame_v1_listener kFrameListener = {
+    .failed = FrameFailed,
+    .cancelled = FrameCancelled,
+    .buffer = FrameBuffer,
+    .buffer_with_plane = FrameBufferWithPlane,
+    .buffer_done = FrameBufferDone,
+};
+
+}  // namespace
+
+bool WaylandBackend::CaptureViaThumbnail(Toplevel* toplevel,
                                          const std::string& out_png_path) {
-  if (toplevel->uuid == nullptr) {
+  if (capture_manager_ == nullptr || toplevel->uuid.empty()) {
     return false;
   }
   CaptureRequest req;
   req.path = out_png_path;
-  const struct kywc_thumbnail_interface impl = {
-      &WaylandBackend::OnThumbnailBuffer, &WaylandBackend::OnThumbnailDestroy};
-  kywc_thumbnail* thumbnail = kywc_thumbnail_create_from_toplevel(
-      context_, toplevel->uuid, /*without_decoration=*/true, &impl, &req);
-  if (thumbnail == nullptr) {
-    return false;
-  }
+  kywc_capture_frame_v1* frame = kywc_capture_manager_v1_capture_toplevel(
+      capture_manager_, toplevel->uuid.c_str(), /*without_decoration=*/1);
+  kywc_capture_frame_v1_add_listener(frame, &kFrameListener, &req);
 
-  struct wl_display* display = kywc_context_get_display(context_);
   gint64 deadline = g_get_monotonic_time() + G_USEC_PER_SEC;
   while (!req.done && g_get_monotonic_time() < deadline) {
-    if (wl_display_roundtrip(display) < 0) {
+    if (wl_display_roundtrip(display_) < 0) {
       break;
     }
   }
-  if (!req.destroyed) {
-    kywc_thumbnail_destroy(thumbnail);
-  }
+  kywc_capture_frame_v1_destroy(frame);
+  Flush();
   return req.ok;
 }
 

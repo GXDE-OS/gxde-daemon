@@ -21,20 +21,53 @@
 #define SRC_BACKEND_WAYLAND_BACKEND_WAYLAND_BACKEND_H_
 
 #include <glib.h>
-#include <libkywc.h>
 
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "src/backend/window_backend.h"
+
+struct wl_display;
+struct wl_registry;
+struct kywc_toplevel_manager_v1;
+struct kywc_toplevel_v1;
+struct kywc_capture_manager_v1;
 
 namespace gxde {
 namespace dock {
 
 class WaylandBackend : public WindowBackend {
  public:
+  struct Toplevel {
+    WaylandBackend* backend = nullptr;
+    kywc_toplevel_v1* handle = nullptr;
+    uint32_t id = 0;
+    std::string uuid;
+    std::string title;
+    std::string app_id;
+    std::string icon;
+    uint32_t pid = 0;
+    uint32_t capabilities = 0;
+    uint32_t state = 0;
+    Toplevel* parent = nullptr;
+    int32_t x = 0;
+    int32_t y = 0;
+    uint32_t width = 0;
+    uint32_t height = 0;
+    bool initialized = false;
+    bool dirty = false;
+    bool reported = false;
+  };
+
+  struct CaptureRequest {
+    std::string path;
+    bool done = false;
+    bool ok = false;
+  };
+
   WaylandBackend() = default;
   ~WaylandBackend() override;
 
@@ -54,45 +87,34 @@ class WaylandBackend : public WindowBackend {
   uint32_t GetWindowGroupLeader(uint32_t id) override;
   const char* Name() const override { return "wayland"; }
 
-  void HandleNewToplevel(kywc_toplevel* toplevel);
-  void HandleToplevelState(kywc_toplevel* toplevel, uint32_t mask);
-  void HandleToplevelDestroy(kywc_toplevel* toplevel);
+  void HandleGlobal(wl_registry* registry, uint32_t name, const char* interface,
+                    uint32_t version);
+  void HandleNewToplevel(kywc_toplevel_v1* handle, const char* uuid);
+  void HandleToplevelDone(Toplevel* toplevel);
+  void HandleToplevelClosed(Toplevel* toplevel);
+  void HandleManagerFinished();
 
  private:
-  struct Tracked {
-    uint32_t id = 0;
-    kywc_toplevel* toplevel = nullptr;
-    bool reported = false;
-  };
-
-  struct CaptureRequest {
-    std::string path;
-    bool done = false;
-    bool ok = false;
-    bool destroyed = false;
-  };
-
-  BackendWindow ToBackendWindow(const Tracked& tracked) const;
-  kywc_toplevel* Lookup(uint32_t id) const;
+  BackendWindow ToBackendWindow(const Toplevel& toplevel) const;
+  Toplevel* Lookup(uint32_t id) const;
   void Flush();
 
-  bool CaptureViaThumbnail(kywc_toplevel* toplevel,
+  bool CaptureViaThumbnail(Toplevel* toplevel,
                            const std::string& out_png_path);
-  static bool OnThumbnailBuffer(kywc_thumbnail* thumbnail,
-                                const struct kywc_thumbnail_buffer* buffer,
-                                void* data);
-  static void OnThumbnailDestroy(kywc_thumbnail* thumbnail, void* data);
 
   static gboolean OnFdReadable(GIOChannel* source, GIOCondition condition,
                                gpointer data);
 
-  kywc_context* context_ = nullptr;
+  wl_display* display_ = nullptr;
+  wl_registry* registry_ = nullptr;
+  kywc_toplevel_manager_v1* toplevel_manager_ = nullptr;
+  kywc_capture_manager_v1* capture_manager_ = nullptr;
   WindowObserver* observer_ = nullptr;
   GIOChannel* io_channel_ = nullptr;
   guint io_watch_ = 0;
   uint32_t next_id_ = 1;
   uint32_t active_id_ = 0;
-  std::map<uint32_t, Tracked> tracked_;
+  std::map<uint32_t, std::unique_ptr<Toplevel>> tracked_;
 };
 
 }  // namespace dock
