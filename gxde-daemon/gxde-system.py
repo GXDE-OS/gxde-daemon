@@ -8,7 +8,7 @@ import gi.repository
 homePath = os.getenv("HOME")
 
 def ChrootPath():
-    return subprocess.getoutput("readlink -f /proc/self/root")
+    return os.path.realpath("/proc/self/root")
 
 loop = gi.repository.GLib.MainLoop()
 
