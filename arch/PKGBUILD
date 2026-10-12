@@ -1,0 +1,66 @@
+# Maintainer: CharOfString <root@charofstring.cc>
+pkgname=gxde-daemon-git
+pkgver=1.3.13
+pkgrel=1
+pkgdesc='GXDE daemon (dock, daemon manager, GTK theme injection and system helpers)'
+arch=('x86_64' 'aarch64')
+url="https://github.com/GXDE-OS/gxde-daemon"
+license=('GPL-3.0-or-later')
+depends=('python' 'python-pydbus' 'python-gobject' 'gxde-wlcom' 'gxde-k9-git' 'polkit' 'espeak-ng'
+         'glib2' 'gdk-pixbuf2' 'cjson' 'wayland' 'libxcb' 'xcb-util-wm' 'libgcc' 'libstdc++' 'glibc')
+makedepends=('git' 'cmake' 'ninja' 'pkgconf')
+provides=('gxde-daemon')
+conflicts=('gxde-daemon')
+source=()
+sha512sums=()
+
+# 直接使用 PKGBUILD 所在的 git 仓库作为源码 ・ Build from the git checkout this PKGBUILD lives in.
+_srcroot() {
+  git -C "$startdir" rev-parse --show-toplevel
+}
+
+# 与 debian/rules 相同，三个插件分别构建 ・ Same as debian/rules, the three plugins are built separately.
+_plugins=(dock daemon-manager gtk-theme-inject)
+
+build() {
+  local _p
+  for _p in "${_plugins[@]}"; do
+    cmake -B build-$_p -S "$(_srcroot)/plugins/$_p" -GNinja \
+      -DCMAKE_BUILD_TYPE=None \
+      -DCMAKE_INSTALL_PREFIX=/usr
+    ninja -C build-$_p
+  done
+}
+
+package() {
+  cd "$(_srcroot)"
+
+  # 按 debian/install 安装（与 dh_install 语义相同：把源复制到目标目录下）
+  # Install following debian/install (dh_install semantics: copy each source
+  # into the destination directory).
+  local _src _dst _f
+  while read -r _src _dst; do
+    [[ -z $_src || $_src == \#* ]] && continue
+    install -d "$pkgdir/$_dst"
+    for _f in $_src; do
+      cp -r --no-preserve=ownership "${_f%/}" "$pkgdir/$_dst/"
+    done
+  done < debian/install
+
+  # 与 debian/rules 的 override_dh_auto_install 相同 ・ Same as override_dh_auto_install in debian/rules.
+  install -Dm755 "$srcdir/build-dock/gxde-dock-daemon" \
+    "$pkgdir/usr/libexec/gxde-daemon/dock/gxde-dock-daemon"
+  install -Dm755 "$srcdir/build-gtk-theme-inject/gxde-gtk-theme-inject" \
+    "$pkgdir/usr/libexec/gxde-daemon/gtk-theme-inject/gxde-gtk-theme-inject"
+  install -Dm755 "$srcdir/build-daemon-manager/gxde-daemon-manager" \
+    "$pkgdir/usr/libexec/gxde-daemon/daemon-manager/gxde-daemon-manager"
+  install -Dm644 -t "$pkgdir/usr/share/gxde-daemon/dock/translations" plugins/dock/translations/*.json
+
+  # Arch 上 /etc 留给管理员：系统 D-Bus 策略和 systemd 单元放到 /usr 下
+  # On Arch /etc belongs to the administrator: system D-Bus policies and
+  # systemd units go under /usr.
+  install -d "$pkgdir/usr/share/dbus-1" "$pkgdir/usr/lib/systemd"
+  mv "$pkgdir/etc/dbus-1/system.d" "$pkgdir/usr/share/dbus-1/"
+  mv "$pkgdir/etc/systemd/system" "$pkgdir/usr/lib/systemd/"
+  rmdir "$pkgdir/etc/dbus-1" "$pkgdir/etc/systemd" "$pkgdir/etc"
+}
