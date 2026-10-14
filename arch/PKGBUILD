@@ -6,7 +6,7 @@ pkgdesc='GXDE daemon (dock, daemon manager, GTK theme injection and system helpe
 arch=('x86_64' 'aarch64')
 url="https://github.com/GXDE-OS/gxde-daemon"
 license=('GPL-3.0-or-later')
-depends=('python' 'python-pydbus' 'python-gobject' 'gxde-wlcom' 'gxde-k9-git' 'polkit' 'espeak-ng'
+depends=('python' 'python-pydbus' 'python-gobject' 'flakewm-git' 'gxde-k9-git' 'polkit' 'espeak-ng'
          'glib2' 'gdk-pixbuf2' 'cjson' 'wayland' 'libxcb' 'xcb-util-wm' 'libgcc' 'libstdc++' 'glibc')
 makedepends=('git' 'cmake' 'ninja' 'pkgconf')
 provides=('gxde-daemon')
