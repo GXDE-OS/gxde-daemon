@@ -1,13 +1,14 @@
 # Maintainer: CharOfString <root@charofstring.cc>
 pkgname=gxde-daemon-git
 pkgver=1.3.13
-pkgrel=1
+pkgrel=2
 pkgdesc='GXDE daemon (dock, daemon manager, GTK theme injection and system helpers)'
 arch=('x86_64' 'aarch64')
 url="https://github.com/GXDE-OS/gxde-daemon"
 license=('GPL-3.0-or-later')
 depends=('python' 'python-pydbus' 'python-gobject' 'flakewm-git' 'gxde-k9-git' 'polkit' 'espeak-ng'
-         'glib2' 'gdk-pixbuf2' 'cjson' 'wayland' 'libxcb' 'xcb-util-wm' 'libgcc' 'libstdc++' 'glibc')
+         'glib2' 'gdk-pixbuf2' 'cjson' 'wayland' 'libxcb' 'xcb-util-wm' 'libgcc' 'libstdc++' 'glibc'
+         'brightnessctl')
 makedepends=('git' 'cmake' 'ninja' 'pkgconf')
 provides=('gxde-daemon')
 conflicts=('gxde-daemon')
