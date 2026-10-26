@@ -45,6 +45,7 @@ struct BackendRect {
 
 struct BackendWindow {
   uint32_t id = 0;
+  std::string uuid;
   std::string app_id;
   std::string wm_instance;
   std::string wm_class;

@@ -291,6 +291,7 @@ void WaylandBackend::Flush() {
 BackendWindow WaylandBackend::ToBackendWindow(const Toplevel& t) const {
   BackendWindow w;
   w.id = t.id;
+  w.uuid = t.uuid;
   w.app_id = t.app_id;
   w.title = t.title;
   w.icon = t.icon;

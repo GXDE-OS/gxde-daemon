@@ -21,6 +21,7 @@
 
 #include <cstring>
 #include <memory>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -591,26 +592,54 @@ void AppEntry::PresentWindows() {
   }
 
   WindowBackend* backend = manager_->backend();
-  if (backend == nullptr || std::strcmp(backend->Name(), "x11") != 0) {
-    g_message("(Dock) PresentWindows is not implemented on the %s backend",
-              backend != nullptr ? backend->Name() : "unknown");
+  GDBusConnection* connection = manager_->connection();
+  if (backend == nullptr || connection == nullptr) {
     return;
   }
 
-  GDBusConnection* connection = manager_->connection();
-  if (connection == nullptr) {
+  const char* backend_name = backend->Name();
+  const bool wayland = std::strcmp(backend_name, "wayland") == 0;
+  if (!wayland && std::strcmp(backend_name, "x11") != 0) {
+    g_message("(Dock) PresentWindows is not implemented on the %s backend",
+              backend_name);
     return;
   }
 
   GVariantBuilder builder;
-  g_variant_builder_init(&builder, G_VARIANT_TYPE("au"));
-  for (uint32_t id : window_ids()) {
-    g_variant_builder_add(&builder, "u", id);
+  const char* service = nullptr;
+  const char* path = nullptr;
+  const char* interface = nullptr;
+  if (wayland) {
+    std::set<std::string> window_uuids;
+    for (const auto& item : windows_) {
+      if (!item.second.uuid.empty()) {
+        window_uuids.insert(item.second.uuid);
+      }
+    }
+    if (window_uuids.empty()) {
+      return;
+    }
+    g_variant_builder_init(&builder, G_VARIANT_TYPE("as"));
+    for (const std::string& uuid : window_uuids) {
+      g_variant_builder_add(&builder, "s", uuid.c_str());
+    }
+    service = "com.kylin.Wlcom.View";
+    path = "/com/kylin/Wlcom/View";
+    interface = "com.kylin.Wlcom.View";
+  } else {
+    g_variant_builder_init(&builder, G_VARIANT_TYPE("au"));
+    for (uint32_t id : window_ids()) {
+      g_variant_builder_add(&builder, "u", id);
+    }
+    service = "com.deepin.wm";
+    path = "/com/deepin/wm";
+    interface = "com.deepin.wm";
   }
 
-  g_dbus_connection_call(connection, "com.deepin.wm", "/com/deepin/wm",
-                         "com.deepin.wm", "PresentWindows",
-                         g_variant_new("(au)", &builder), nullptr,
+  GVariant* parameters =
+      wayland ? g_variant_new("(as)", &builder) : g_variant_new("(au)", &builder);
+  g_dbus_connection_call(connection, service, path, interface, "PresentWindows",
+                         parameters, nullptr,
                          G_DBUS_CALL_FLAGS_NO_AUTO_START, 1000, nullptr,
                          OnPresentWindowsDone, nullptr);
 }
