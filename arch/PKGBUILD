@@ -1,7 +1,7 @@
 # Maintainer: CharOfString <root@charofstring.cc>
 pkgname=gxde-daemon-git
-pkgver=1.3.13
-pkgrel=2
+pkgver=1.3.14
+pkgrel=1
 pkgdesc='GXDE daemon (dock, daemon manager, GTK theme injection and system helpers)'
 arch=('x86_64' 'aarch64')
 url="https://github.com/GXDE-OS/gxde-daemon"

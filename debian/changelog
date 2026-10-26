@@ -1,3 +1,10 @@
+gxde-daemon (1.3.14) UNRELEASED; urgency=medium
+
+  * 修复 X11 下在 Dock 图标上滚动滚轮无法展开当前应用全部窗口的问题
+  * 修复 Dock 右键菜单“所有窗口”变为依次激活窗口而非展开选择的问题
+
+ -- shenmo <jifengshenmo@outlook.com>  Mon, 26 Oct 2026 14:42:52 +0800
+
 gxde-daemon (1.3.13) UNRELEASED; urgency=medium
 
   [ CharOfString ]
