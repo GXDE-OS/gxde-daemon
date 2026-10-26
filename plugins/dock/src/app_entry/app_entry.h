@@ -83,6 +83,7 @@ class AppEntry {
 
   void Activate(uint32_t timestamp);
   void LaunchApp(const std::vector<std::string>& files);
+  void PresentWindows();
   void HandleMenuItem(const std::string& item_id);
   void CloseAllWindows();
   void ForceQuit();

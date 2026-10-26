@@ -19,6 +19,7 @@
 
 #include <cjson/cJSON.h>
 
+#include <cstring>
 #include <memory>
 #include <string>
 #include <utility>
@@ -106,6 +107,19 @@ std::vector<std::string> ReadCmdline(uint32_t pid) {
   g_free(contents);
   g_free(path);
   return argv;
+}
+
+void OnPresentWindowsDone(GObject* source, GAsyncResult* result, gpointer) {
+  GError* error = nullptr;
+  GVariant* reply =
+      g_dbus_connection_call_finish(G_DBUS_CONNECTION(source), result, &error);
+  if (reply != nullptr) {
+    g_variant_unref(reply);
+  }
+  if (error != nullptr) {
+    g_warning("(Dock) PresentWindows failed: %s", error->message);
+    g_clear_error(&error);
+  }
 }
 
 }  // namespace
@@ -486,9 +500,7 @@ void AppEntry::OnMethodCall(GDBusConnection* /*connection*/,
     self->manager_->UndockEntry(self);
     g_dbus_method_invocation_return_value(invocation, nullptr);
   } else if (method == "PresentWindows") {
-    g_message(
-        "dock: PresentWindows is a compositor feature not exposed by the "
-        "backend");
+    self->PresentWindows();
     g_dbus_method_invocation_return_value(invocation, nullptr);
   } else if (method == "Check") {
     self->UpdateIsActive();
@@ -573,6 +585,36 @@ void AppEntry::LaunchApp(const std::vector<std::string>& files) {
   }
 }
 
+void AppEntry::PresentWindows() {
+  if (windows_.empty()) {
+    return;
+  }
+
+  WindowBackend* backend = manager_->backend();
+  if (backend == nullptr || std::strcmp(backend->Name(), "x11") != 0) {
+    g_message("(Dock) PresentWindows is not implemented on the %s backend",
+              backend != nullptr ? backend->Name() : "unknown");
+    return;
+  }
+
+  GDBusConnection* connection = manager_->connection();
+  if (connection == nullptr) {
+    return;
+  }
+
+  GVariantBuilder builder;
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("au"));
+  for (uint32_t id : window_ids()) {
+    g_variant_builder_add(&builder, "u", id);
+  }
+
+  g_dbus_connection_call(connection, "com.deepin.wm", "/com/deepin/wm",
+                         "com.deepin.wm", "PresentWindows",
+                         g_variant_new("(au)", &builder), nullptr,
+                         G_DBUS_CALL_FLAGS_NO_AUTO_START, 1000, nullptr,
+                         OnPresentWindowsDone, nullptr);
+}
+
 void AppEntry::HandleMenuItem(const std::string& item_id) {
   if (item_id == "launch") {
     LaunchApp({});
@@ -587,9 +629,7 @@ void AppEntry::HandleMenuItem(const std::string& item_id) {
   } else if (item_id == "undock") {
     manager_->UndockEntry(this);
   } else if (item_id == "all-windows") {
-    for (uint32_t id : window_ids()) {
-      manager_->backend()->Activate(id);
-    }
+    PresentWindows();
   } else if (item_id.rfind("action:", 0) == 0 && app_info_ != nullptr) {
     GDesktopAppInfo* info =
         g_desktop_app_info_new_from_filename(app_info_->file_name().c_str());
