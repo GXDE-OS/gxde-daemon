@@ -19,9 +19,7 @@
 
 #include <cjson/cJSON.h>
 
-#include <cstring>
 #include <memory>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -108,19 +106,6 @@ std::vector<std::string> ReadCmdline(uint32_t pid) {
   g_free(contents);
   g_free(path);
   return argv;
-}
-
-void OnPresentWindowsDone(GObject* source, GAsyncResult* result, gpointer) {
-  GError* error = nullptr;
-  GVariant* reply =
-      g_dbus_connection_call_finish(G_DBUS_CONNECTION(source), result, &error);
-  if (reply != nullptr) {
-    g_variant_unref(reply);
-  }
-  if (error != nullptr) {
-    g_warning("(Dock) PresentWindows failed: %s", error->message);
-    g_clear_error(&error);
-  }
 }
 
 }  // namespace
@@ -592,56 +577,14 @@ void AppEntry::PresentWindows() {
   }
 
   WindowBackend* backend = manager_->backend();
-  GDBusConnection* connection = manager_->connection();
-  if (backend == nullptr || connection == nullptr) {
+  if (backend == nullptr) {
     return;
   }
 
-  const char* backend_name = backend->Name();
-  const bool wayland = std::strcmp(backend_name, "wayland") == 0;
-  if (!wayland && std::strcmp(backend_name, "x11") != 0) {
-    g_message("(Dock) PresentWindows is not implemented on the %s backend",
-              backend_name);
-    return;
+  if (!backend->PresentWindows(manager_->connection(), window_ids())) {
+    g_message("(Dock) PresentWindows failed on the %s backend",
+              backend->Name());
   }
-
-  GVariantBuilder builder;
-  const char* service = nullptr;
-  const char* path = nullptr;
-  const char* interface = nullptr;
-  if (wayland) {
-    std::set<std::string> window_uuids;
-    for (const auto& item : windows_) {
-      if (!item.second.uuid.empty()) {
-        window_uuids.insert(item.second.uuid);
-      }
-    }
-    if (window_uuids.empty()) {
-      return;
-    }
-    g_variant_builder_init(&builder, G_VARIANT_TYPE("as"));
-    for (const std::string& uuid : window_uuids) {
-      g_variant_builder_add(&builder, "s", uuid.c_str());
-    }
-    service = "com.kylin.Wlcom.View";
-    path = "/com/kylin/Wlcom/View";
-    interface = "com.kylin.Wlcom.View";
-  } else {
-    g_variant_builder_init(&builder, G_VARIANT_TYPE("au"));
-    for (uint32_t id : window_ids()) {
-      g_variant_builder_add(&builder, "u", id);
-    }
-    service = "com.deepin.wm";
-    path = "/com/deepin/wm";
-    interface = "com.deepin.wm";
-  }
-
-  GVariant* parameters =
-      wayland ? g_variant_new("(as)", &builder) : g_variant_new("(au)", &builder);
-  g_dbus_connection_call(connection, service, path, interface, "PresentWindows",
-                         parameters, nullptr,
-                         G_DBUS_CALL_FLAGS_NO_AUTO_START, 1000, nullptr,
-                         OnPresentWindowsDone, nullptr);
 }
 
 void AppEntry::HandleMenuItem(const std::string& item_id) {

@@ -20,6 +20,8 @@
 #ifndef SRC_BACKEND_WINDOW_BACKEND_H_
 #define SRC_BACKEND_WINDOW_BACKEND_H_
 
+#include <gio/gio.h>
+
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -45,7 +47,6 @@ struct BackendRect {
 
 struct BackendWindow {
   uint32_t id = 0;
-  std::string uuid;
   std::string app_id;
   std::string wm_instance;
   std::string wm_class;
@@ -90,6 +91,11 @@ class WindowBackend {
   virtual bool KillClient(uint32_t id) = 0;
 
   virtual bool CaptureWindow(uint32_t id, const std::string& out_png_path) = 0;
+
+  // Ask the session's window manager / compositor to show these windows in
+  // its window overview.  The D-Bus connection belongs to the dock service.
+  virtual bool PresentWindows(GDBusConnection* connection,
+                              const std::vector<uint32_t>& ids) = 0;
 
   virtual const char* Name() const = 0;
 };

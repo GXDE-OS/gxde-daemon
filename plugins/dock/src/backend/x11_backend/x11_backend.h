@@ -51,6 +51,8 @@ class X11Backend : public WindowBackend {
   bool MoveWindow(uint32_t id) override;
   bool KillClient(uint32_t id) override;
   bool CaptureWindow(uint32_t id, const std::string& out_png_path) override;
+  bool PresentWindows(GDBusConnection* connection,
+                      const std::vector<uint32_t>& ids) override;
   BackendRect GetWindowGeometry(uint32_t id) override;
   uint32_t GetWindowGroupLeader(uint32_t id) override;
   const char* Name() const override { return "x11"; }

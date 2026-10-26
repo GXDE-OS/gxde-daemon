@@ -54,6 +54,19 @@ std::string ToLower(std::string s) {
   return s;
 }
 
+void OnPresentWindowsDone(GObject* source, GAsyncResult* result, gpointer) {
+  GError* error = nullptr;
+  GVariant* reply =
+      g_dbus_connection_call_finish(G_DBUS_CONNECTION(source), result, &error);
+  if (reply != nullptr) {
+    g_variant_unref(reply);
+  }
+  if (error != nullptr) {
+    g_warning("(Dock) X11: PresentWindows failed: %s", error->message);
+    g_clear_error(&error);
+  }
+}
+
 }  // namespace
 
 X11Backend::~X11Backend() {
@@ -575,6 +588,35 @@ bool X11Backend::CaptureWindow(uint32_t id, const std::string& out_png_path) {
     g_clear_error(&error);
     return false;
   }
+  return true;
+}
+
+bool X11Backend::PresentWindows(GDBusConnection* connection,
+                                const std::vector<uint32_t>& ids) {
+  if (connection == nullptr || ids.empty()) {
+    return false;
+  }
+
+  GVariantBuilder builder;
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("au"));
+  guint count = 0;
+  for (uint32_t id : ids) {
+    if (windows_.count(id) == 0) {
+      continue;
+    }
+    g_variant_builder_add(&builder, "u", id);
+    ++count;
+  }
+  if (count == 0) {
+    g_variant_builder_clear(&builder);
+    return false;
+  }
+
+  g_dbus_connection_call(connection, "com.deepin.wm", "/com/deepin/wm",
+                         "com.deepin.wm", "PresentWindows",
+                         g_variant_new("(au)", &builder), nullptr,
+                         G_DBUS_CALL_FLAGS_NO_AUTO_START, 1000, nullptr,
+                         OnPresentWindowsDone, nullptr);
   return true;
 }
 

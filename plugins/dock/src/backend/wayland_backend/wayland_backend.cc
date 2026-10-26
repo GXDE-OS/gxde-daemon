@@ -47,6 +47,26 @@ using Toplevel = WaylandBackend::Toplevel;
 constexpr uint32_t kToplevelManagerVersion = 1;
 constexpr uint32_t kCaptureManagerVersion = 1;
 
+// gxde-wlcom exposes the compositor-side window overview on the View
+// interface; the dock passes kywc toplevel uuids so that it can present
+// exactly the windows it groups under an application entry.
+constexpr char kWlcomService[] = "com.kylin.Wlcom";
+constexpr char kWlcomViewPath[] = "/com/kylin/Wlcom/View";
+constexpr char kWlcomViewInterface[] = "com.kylin.Wlcom.View";
+
+void OnPresentWindowsDone(GObject* source, GAsyncResult* result, gpointer) {
+  GError* error = nullptr;
+  GVariant* reply =
+      g_dbus_connection_call_finish(G_DBUS_CONNECTION(source), result, &error);
+  if (reply != nullptr) {
+    g_variant_unref(reply);
+  }
+  if (error != nullptr) {
+    g_warning("(Dock) Wayland: PresentWindows failed: %s", error->message);
+    g_clear_error(&error);
+  }
+}
+
 template <typename T>
 void UpdateField(Toplevel* toplevel, T* field, const T& value) {
   if (*field != value) {
@@ -291,7 +311,6 @@ void WaylandBackend::Flush() {
 BackendWindow WaylandBackend::ToBackendWindow(const Toplevel& t) const {
   BackendWindow w;
   w.id = t.id;
-  w.uuid = t.uuid;
   w.app_id = t.app_id;
   w.title = t.title;
   w.icon = t.icon;
@@ -684,6 +703,36 @@ bool WaylandBackend::CaptureViaThumbnail(Toplevel* toplevel,
   kywc_capture_frame_v1_destroy(frame);
   Flush();
   return req.ok;
+}
+
+bool WaylandBackend::PresentWindows(GDBusConnection* connection,
+                                    const std::vector<uint32_t>& ids) {
+  if (connection == nullptr || ids.empty()) {
+    return false;
+  }
+
+  GVariantBuilder builder;
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("as"));
+  guint count = 0;
+  for (uint32_t id : ids) {
+    Toplevel* toplevel = Lookup(id);
+    if (toplevel == nullptr || toplevel->uuid.empty()) {
+      continue;
+    }
+    g_variant_builder_add(&builder, "s", toplevel->uuid.c_str());
+    ++count;
+  }
+  if (count == 0) {
+    g_variant_builder_clear(&builder);
+    return false;
+  }
+
+  g_dbus_connection_call(connection, kWlcomService, kWlcomViewPath,
+                         kWlcomViewInterface, "PresentWindows",
+                         g_variant_new("(as)", &builder), nullptr,
+                         G_DBUS_CALL_FLAGS_NO_AUTO_START, 1000, nullptr,
+                         OnPresentWindowsDone, nullptr);
+  return true;
 }
 
 }  // namespace dock
