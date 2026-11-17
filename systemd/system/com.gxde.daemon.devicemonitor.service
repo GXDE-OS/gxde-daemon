@@ -1,0 +1,11 @@
+[Unit]
+Description=GXDE Device Monitor Service
+
+[Service]
+Type=dbus
+BusName=com.gxde.daemon.devicemonitor
+ExecStart=/usr/bin/python3 /usr/libexec/gxde-daemon/gxde-devicemonitor.py
+
+[Install]
+WantedBy=multi-user.target
+Alias=com.gxde.daemon.devicemonitor

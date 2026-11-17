@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=com.gxde.daemon.devicemonitor
+Exec=/usr/bin/env python3 /usr/libexec/gxde-daemon/gxde-devicemonitor.py
+User=root
